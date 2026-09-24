@@ -1,1 +1,45 @@
-<p>private-layout works!</p>
+<div class="min-h-screen flex flex-column surface-ground">
+  <header
+    class="flex align-items-center justify-content-between gap-3 px-3 md:px-4 py-2 surface-0 shadow-1 sticky top-0 z-5"
+  >
+    <div class="flex align-items-center gap-3">
+      <p-button
+        icon="pi pi-bars"
+        [text]="true"
+        [rounded]="true"
+        styleClass="md:hidden"
+        ariaLabel="Abrir menú"
+        (onClick)="mobileMenuOpen = true"
+      />
+      <img src="favicon.png" alt="LogiPet" class="h-2rem" />
+      <span class="font-semibold text-color hidden sm:inline">LogiPet</span>
+    </div>
+
+    <p-button
+      icon="pi pi-sign-out"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      ariaLabel="Cerrar sesión"
+      (onClick)="onLogout()"
+    />
+  </header>
+
+  <div class="flex flex-1">
+    <aside class="hidden md:flex flex-column w-15rem surface-0 shadow-1 p-3">
+      <app-sidebar-nav />
+    </aside>
+
+    <p-drawer [(visible)]="mobileMenuOpen" position="left" styleClass="w-18rem">
+      <app-sidebar-nav (navigate)="mobileMenuOpen = false" />
+    </p-drawer>
+
+    <main class="flex-1 p-3 md:p-4 overflow-x-auto">
+      <router-outlet />
+    </main>
+  </div>
+
+  <footer class="text-center text-color-secondary text-sm py-3 surface-0 shadow-1">
+    © {{ currentYear }} LogiPet
+  </footer>
+</div>
