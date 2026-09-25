@@ -1,0 +1,20 @@
+<div class="min-h-screen flex flex-column surface-ground">
+  
+  <app-header></app-header>
+
+  <div class="flex flex-1">
+    <aside class="hidden md:flex flex-column w-15rem surface-0 shadow-1 p-3">
+      <app-sidebar-nav />
+    </aside>
+
+    <p-drawer [(visible)]="mobileMenuOpen" position="left" styleClass="w-18rem">
+      <app-sidebar-nav (navigate)="mobileMenuOpen = false" />
+    </p-drawer>
+
+    <main class="flex-1 p-3 md:p-4 overflow-x-auto">
+      <router-outlet />
+    </main>
+  </div>
+
+  <app-footer></app-footer>
+</div>

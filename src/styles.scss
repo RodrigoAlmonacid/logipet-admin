@@ -1,1 +1,41 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  /* Marca LogiPet */
+  --lp-navy-primary: #1D2B4C;
+  --lp-navy-hover: #141E36;
+  --lp-pink-accent: #FF5097;
+  --lp-pink-hover: #E03E81;
+  --lp-pink-soft: #FFF0F5;
+
+  /* Fondos y Neutros */
+  --lp-bg-app: #F8FAFC;
+  --lp-bg-card: #FFFFFF;
+  --lp-border: #E2E8F0;
+  
+  /* Tipografía */
+  --lp-text-main: #1E293B;
+  --lp-text-muted: #64748B;
+  --lp-text-white: #FFFFFF;
+
+  /* Estado */
+  --lp-danger-bg: #FEF2F2;
+  --lp-danger-text: #DC2626;
+  --lp-danger-border: #FECACA;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--lp-bg-app);
+  color: var(--lp-text-main);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+app-root {
+  display: block;
+  min-height: 100%;
+}

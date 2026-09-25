@@ -1,0 +1,126 @@
+<p-toast />
+<p-confirmdialog />
+
+<div class="flex align-items-center justify-content-between mb-4">
+  <h2 class="m-0">Empleados</h2>
+  <p-button label="Nuevo empleado" icon="pi pi-plus" (onClick)="openCreate()" />
+</div>
+
+<p-table [value]="empleados()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
+  <ng-template #header>
+    <tr>
+      <th>Legajo</th>
+      <th>Nombre</th>
+      <th>Email</th>
+      <th>Roles</th>
+      <th>Estado</th>
+      <th class="text-right">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-emp>
+    <tr>
+      <td>{{ emp.legajo }}</td>
+      <td>{{ emp.apellido }}, {{ emp.nombre }}</td>
+      <td>{{ emp.email }}</td>
+      <td>
+        <div class="flex flex-wrap gap-1">
+          @for (rol of emp.roles; track rol.id) {
+            <p-tag [value]="rol.nombre" severity="info" />
+          } @empty {
+            <span class="text-color-secondary text-sm">Sin roles</span>
+          }
+        </div>
+      </td>
+      <td>
+        <p-tag [value]="emp.activo ? 'Activo' : 'Inactivo'" [severity]="emp.activo ? 'success' : 'danger'" />
+      </td>
+      <td class="text-right">
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(emp)" />
+        <p-button
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          [disabled]="!emp.activo || emp.id === currentUserId"
+          (onClick)="confirmRemove(emp)"
+        />
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #emptymessage>
+    <tr><td colspan="6" class="text-center p-4">No hay empleados cargados.</td></tr>
+  </ng-template>
+</p-table>
+
+<p-dialog
+  [header]="editing() ? 'Editar empleado' : 'Nuevo empleado'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '32rem' }"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="nombre" class="text-sm font-medium">Nombre</label>
+      <input pInputText id="nombre" formControlName="nombre" class="w-full" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+        <small class="text-red-500">El nombre es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="apellido" class="text-sm font-medium">Apellido</label>
+      <input pInputText id="apellido" formControlName="apellido" class="w-full" />
+      @if (form.controls.apellido.invalid && form.controls.apellido.touched) {
+        <small class="text-red-500">El apellido es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="email" class="text-sm font-medium">Correo electrónico</label>
+      <input pInputText id="email" type="email" formControlName="email" class="w-full" />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <small class="text-red-500">Ingresá un correo válido.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="legajo" class="text-sm font-medium">Legajo</label>
+      <input pInputText id="legajo" formControlName="legajo" class="w-full" />
+      @if (form.controls.legajo.invalid && form.controls.legajo.touched) {
+        <small class="text-red-500">El legajo es obligatorio.</small>
+      }
+    </div>
+
+    @if (editing()) {
+      <div class="flex flex-column gap-2">
+        <label for="roles" class="text-sm font-medium">Roles</label>
+        <p-multiselect
+          inputId="roles"
+          formControlName="roleIds"
+          [options]="roles()"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Sin roles"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="flex align-items-center gap-2">
+        <p-checkbox inputId="activo" formControlName="activo" [binary]="true" />
+        <label for="activo" class="text-sm font-medium">Usuario activo</label>
+      </div>
+    } @else {
+      <small class="text-color-secondary">
+        Se crea inactivo y sin roles. Después lo editás para activarlo y asignarle roles.
+      </small>
+    }
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+      <p-button type="submit" label="Guardar" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

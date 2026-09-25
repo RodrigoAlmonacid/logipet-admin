@@ -1,0 +1,62 @@
+<div class="w-full" style="max-width: 26rem">
+  <div class="flex flex-column align-items-center mb-5">
+    <img src="logo-logipet.png" alt="LogiPet" class="w-6rem mb-3" />
+    <span class="text-color-secondary text-sm mt-2 text-center">
+      Gestión interna de pedidos y envíos
+    </span>
+  </div>
+
+  <p-card styleClass="shadow-2 border-round-2xl">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-column gap-4">
+      <div class="flex flex-column gap-2">
+        <label for="email" class="text-sm font-medium text-color-secondary">
+          Correo electrónico
+        </label>
+        <input
+          pInputText
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="nombre@logipet.com"
+          class="w-full"
+          autocomplete="username"
+        />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <small class="text-red-500">Ingresá un correo válido.</small>
+        }
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="pass" class="text-sm font-medium text-color-secondary">
+          Contraseña
+        </label>
+        <p-password
+          id="pass"
+          formControlName="pass"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          autocomplete="current-password"
+        />
+        @if (form.controls.pass.invalid && form.controls.pass.touched) {
+          <small class="text-red-500">La contraseña es obligatoria.</small>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [closable]="false" styleClass="w-full">
+          {{ errorMessage() }}
+        </p-message>
+      }
+
+      <p-button
+        type="submit"
+        label="Ingresar"
+        [loading]="loading()"
+        [disabled]="form.invalid"
+        styleClass="w-full"
+      />
+    </form>
+  </p-card>
+</div>
