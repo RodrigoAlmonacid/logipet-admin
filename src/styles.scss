@@ -28,3 +28,14 @@ body {
   background-color: var(--lp-bg-app);
   color: var(--lp-text-main);
 }
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+app-root {
+  display: block;
+  min-height: 100%;
+}
