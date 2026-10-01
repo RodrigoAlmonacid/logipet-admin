@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
 import { environment } from './../environments/environment';
 
 export interface LoginRequest {
@@ -22,30 +23,8 @@ export interface LoginResponse {
   user: EmpleadoAutenticado;
 }
 
-interface JwtPayload {
-  sub: number;
-  email: string;
-  roles: string[];
-  exp: number;
-}
-
 const TOKEN_KEY = 'logipet_token';
 const USER_KEY = 'logipet_user';
-
-function decodeToken(token: string): JwtPayload | null {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
-        .join(''),
-    );
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -80,8 +59,8 @@ export class AuthService {
 
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
-    this._isAuthenticated.set(false);
     localStorage.removeItem(USER_KEY);
+    this._isAuthenticated.set(false);
     this._currentUser.set(null);
   }
 
@@ -89,25 +68,20 @@ export class AuthService {
     return localStorage.getItem(TOKEN_KEY);
   }
 
-  /** Hay token y no venció */
   isSessionActive(): boolean {
     const token = this.getToken();
-    const payload = token ? decodeToken(token) : null;
-    return !!payload && payload.exp * 1000 > Date.now();
-  }
+    if (!token) return false;
 
-  userId(): number | null {
-    const token = this.getToken();
-    return token ? (decodeToken(token)?.sub ?? null) : null;
-  }
-
-  roles(): string[] {
-    const token = this.getToken();
-    return token ? (decodeToken(token)?.roles ?? []) : [];
+    try {
+      const { exp } = jwtDecode<{ exp: number }>(token);
+      return exp * 1000 > Date.now();
+    } catch {
+      return false;
+    }
   }
 
   hasAnyRole(required: string[]): boolean {
-    const mine = this.roles();
+    const mine = this._currentUser()?.roles ?? [];
     return required.some((r) => mine.includes(r));
   }
 
@@ -118,4 +92,15 @@ export class AuthService {
       return null;
     }
   }
+
+  forgotPassword(email: string): Observable<{ message: string }> {
+  return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/forgot-password`, { email });
+}
+
+resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+  return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/reset-password`, {
+    token,
+    newPassword,
+  });
+}
 }

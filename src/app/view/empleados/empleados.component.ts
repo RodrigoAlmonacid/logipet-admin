@@ -37,7 +37,7 @@ export class EmpleadosComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly dialogVisible = signal(false);
   protected readonly editing = signal<Empleado | null>(null);
-  protected readonly currentUserId = this.auth.userId();
+  protected readonly currentUserId = this.auth.currentUser()?.id;
 
   protected readonly form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],
