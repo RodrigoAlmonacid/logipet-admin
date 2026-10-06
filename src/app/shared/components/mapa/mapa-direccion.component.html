@@ -1,0 +1,46 @@
+<p-dialog
+  header="Elegir ubicación"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  (onHide)="cancelar()"
+  (onShow)="onDialogShown()"
+>
+  <div class="flex gap-2 mb-3">
+    <input
+      pInputText
+      [(ngModel)]="busqueda"
+      placeholder="Dirección o código postal"
+      class="w-full"
+      (keyup.enter)="buscar()"
+    />
+    <p-button label="Buscar" icon="pi pi-search" [loading]="buscando()" (onClick)="buscar()" />
+  </div>
+
+  @if (resultados().length > 0) {
+    <ul class="flex flex-column gap-1 mb-3" style="max-height: 150px; overflow-y: auto;">
+      @for (r of resultados(); track r.display_name) {
+        <li>
+          <button
+            type="button"
+            class="p-link text-left w-full p-2 border-round hover:surface-100"
+            (click)="elegirResultado(r)"
+          >
+            {{ r.display_name }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <div #mapContainer style="height: 300px; width: 100%; border-radius: 6px;"></div>
+
+  <small class="text-color-secondary block mt-2">
+    Buscá una dirección, o hacé clic directo en el mapa. Podés arrastrar el pin para ajustarlo.
+  </small>
+
+  <div class="flex justify-content-end gap-2 mt-3">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelar()" />
+    <p-button label="Confirmar ubicación" (onClick)="confirmar()" />
+  </div>
+</p-dialog>
