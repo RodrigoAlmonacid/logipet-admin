@@ -49,6 +49,18 @@ export const routes: Routes = [
         canActivate: [roleGuard], // protejo con roles
         data: { roles: ['adminUser', 'superAdmin'] }
       },
+      {
+        path: 'articulos',
+        loadComponent: () => import('./view/articulos/articulos.component').then(m => m.ArticulosComponent),
+        canActivate: [roleGuard], // protejo con roles
+        data: { roles: ['adminUser', 'superAdmin'] }
+      },
+      {
+        path: 'marcas',
+        loadComponent: () => import('./view/marcas/marcas.component').then(m => m.MarcasComponent),
+        canActivate: [roleGuard], // protejo con roles
+        data: { roles: ['adminUser', 'superAdmin'] }
+      },
     ],
   },
 
