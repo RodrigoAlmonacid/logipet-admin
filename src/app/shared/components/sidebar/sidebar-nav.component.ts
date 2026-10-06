@@ -11,6 +11,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
   { label: 'Empleados', icon: 'pi pi-users', route: '/empleados', roles: ['adminUser', 'superAdmin'] },
+  { label: 'Clientes', icon: 'pi pi-users', route: '/clientes', roles: ['adminUser', 'superAdmin'] },
 ];
 
 @Component({
