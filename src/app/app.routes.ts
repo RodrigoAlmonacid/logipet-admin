@@ -16,15 +16,15 @@ export const routes: Routes = [
           import('./view/login/login.component').then((m) => m.LoginComponent),
       },
       {
-  path: 'forgot-password',
-  loadComponent: () =>
-    import('./view/passForgot/forgot-password.component').then((m) => m.ForgotPasswordComponent),
-},
-{
-  path: 'reset-password',
-  loadComponent: () =>
-    import('./view/passReset/reset-password.component').then((m) => m.ResetPasswordComponent),
-},
+        path: 'forgot-password',
+        loadComponent: () =>
+          import('./view/passForgot/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+      },
+      {
+        path: 'reset-password',
+        loadComponent: () =>
+          import('./view/passReset/reset-password.component').then((m) => m.ResetPasswordComponent),
+      },
     ],
   },
 
@@ -40,6 +40,12 @@ export const routes: Routes = [
       {
         path: 'empleados',
         loadComponent: () => import('./view/empleados/empleados.component').then(m => m.EmpleadosComponent),
+        canActivate: [roleGuard], // protejo con roles
+        data: { roles: ['adminUser', 'superAdmin'] }
+      },
+      {
+        path: 'clientes',
+        loadComponent: () => import('./view/clientes/clientes.component').then(m => m.ClientesComponent),
         canActivate: [roleGuard], // protejo con roles
         data: { roles: ['adminUser', 'superAdmin'] }
       },
