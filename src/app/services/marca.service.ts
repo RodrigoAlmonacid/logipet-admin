@@ -7,16 +7,35 @@ export interface Marca {
   nombre: string;
 }
 
-export interface CreateMarca { nombre: string; }
+export interface CreateMarca {
+  nombre: string;
+}
+
 export type UpdateMarca = Partial<CreateMarca>;
+
+export interface CreateMarcaResponse {
+  message: string;
+  marca: Marca;
+}
 
 @Injectable({ providedIn: 'root' })
 export class MarcaService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/marcas`;
 
-  list() { return this.http.get<Marca[]>(this.url); }
-  create(dto: CreateMarca) { return this.http.post<{ message: string; marca: Marca }>(this.url, dto); }
-  update(id: number, dto: UpdateMarca) { return this.http.patch<Marca>(`${this.url}/${id}`, dto); }
-  remove(id: number) { return this.http.delete<{ message: string }>(`${this.url}/${id}`); }
+  list() {
+    return this.http.get<Marca[]>(this.url);
+  }
+
+  create(dto: CreateMarca) {
+    return this.http.post<CreateMarcaResponse>(this.url, dto);
+  }
+
+  update(id: number, dto: UpdateMarca) {
+    return this.http.patch<Marca>(`${this.url}/${id}`, dto);
+  }
+
+  remove(id: number) {
+    return this.http.delete<{ message: string }>(`${this.url}/${id}`);
+  }
 }

@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -18,9 +19,9 @@ import { Marca, MarcaService } from '../../services/marca.service';
 @Component({
   selector: 'app-articulos',
   imports: [
-    ReactiveFormsModule, TableModule, ButtonModule, DialogModule,
+    ReactiveFormsModule, FormsModule, TableModule, ButtonModule, DialogModule,
     InputTextModule, InputNumberModule, SelectModule, TextareaModule,
-    ToastModule, ConfirmDialogModule,
+    ToastModule, ConfirmDialogModule, CurrencyPipe,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './articulos.component.html',
@@ -39,6 +40,11 @@ export class ArticulosComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly dialogVisible = signal(false);
   protected readonly editing = signal<Articulo | null>(null);
+
+  // diálogo chico para dar de alta una marca sin salir del formulario de artículo
+  protected readonly marcaDialogVisible = signal(false);
+  protected readonly savingMarca = signal(false);
+  protected nuevaMarcaNombre = '';
 
   protected readonly form = this.fb.nonNullable.group({
     codigo: ['', Validators.required],
@@ -75,13 +81,8 @@ export class ArticulosComponent implements OnInit {
   protected openCreate(): void {
     this.editing.set(null);
     this.form.reset({
-      codigo: '',
-      nombre: '',
-      presentacion: '',
-      descripcion: '',
-      precio: 0,
-      stock: 0,
-      marcaId: null,
+      codigo: '', nombre: '', presentacion: '', descripcion: '',
+      precio: 0, stock: 0, marcaId: null,
     });
     this.dialogVisible.set(true);
   }
@@ -135,18 +136,47 @@ export class ArticulosComponent implements OnInit {
     });
   }
 
+  // --- Alta rápida de marca, sin salir del formulario de artículo ---
+
+  protected abrirNuevaMarca(): void {
+    this.nuevaMarcaNombre = '';
+    this.marcaDialogVisible.set(true);
+  }
+
+  protected guardarNuevaMarca(): void {
+    const nombre = this.nuevaMarcaNombre.trim();
+    if (!nombre) {
+      return;
+    }
+    this.savingMarca.set(true);
+
+    this.marcaService.create({ nombre }).subscribe({
+      next: (response) => {
+        const marca = response.marca;
+        this.marcas.update((actuales) => [...actuales, marca]);
+        this.form.controls.marcaId.setValue(marca.id);
+        this.savingMarca.set(false);
+        this.marcaDialogVisible.set(false);
+      },
+      error: (err) => {
+        this.savingMarca.set(false);
+        this.showError(err);
+      },
+    });
+  }
+
   protected confirmRemove(art: Articulo): void {
     this.confirmation.confirm({
-      header: 'Eliminar artículo',
-      message: `¿Eliminar "${art.nombre}" (${art.codigo})?`,
+      header: 'Dar de baja',
+      message: `¿Dar de baja "${art.nombre}" (${art.codigo})?`,
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
+      acceptLabel: 'Dar de baja',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () =>
         this.articuloService.remove(art.id).subscribe({
           next: () => {
-            this.messages.add({ severity: 'success', summary: 'Artículo eliminado' });
+            this.messages.add({ severity: 'success', summary: 'Artículo dado de baja' });
             this.load();
           },
           error: (err) => this.showError(err),
