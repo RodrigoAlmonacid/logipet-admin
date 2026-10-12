@@ -1,0 +1,121 @@
+<p-toast />
+<p-confirmdialog />
+
+<div class="flex align-items-center justify-content-between mb-4">
+  <h2 class="m-0">Artículos</h2>
+  <p-button label="Nuevo artículo" icon="pi pi-plus" (onClick)="openCreate()" />
+</div>
+
+<p-table [value]="articulos()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
+  <ng-template #header>
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th>Marca</th>
+      <th>Presentación</th>
+      <th class="text-right">Precio</th>
+      <th class="text-right">Stock</th>
+      <th class="text-right">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-art>
+    <tr>
+      <td>{{ art.codigo }}</td>
+      <td>{{ art.nombre }}</td>
+      <td>{{ art.marca?.nombre ?? '—' }}</td>
+      <td>{{ art.presentacion }}</td>
+      <td class="text-right">{{ art.precio | currency:'ARS' }}</td>
+      <td class="text-right">{{ art.stock }}</td>
+      <td class="text-right">
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(art)" />
+        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" (onClick)="confirmRemove(art)" />
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #emptymessage>
+    <tr><td colspan="7" class="text-center p-4">No hay artículos cargados.</td></tr>
+  </ng-template>
+</p-table>
+
+<p-dialog
+  [header]="editing() ? 'Editar artículo' : 'Nuevo artículo'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '38rem' }"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
+    <div class="grid">
+      <div class="col-6 flex flex-column gap-2">
+        <label for="codigo" class="text-sm font-medium">Código</label>
+        <input pInputText id="codigo" formControlName="codigo" class="w-full" />
+        @if (form.controls.codigo.invalid && form.controls.codigo.touched) {
+          <small class="text-red-500">El código es obligatorio.</small>
+        }
+      </div>
+
+      <div class="col-6 flex flex-column gap-2">
+        <label for="nombre" class="text-sm font-medium">Nombre</label>
+        <input pInputText id="nombre" formControlName="nombre" class="w-full" />
+        @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+          <small class="text-red-500">El nombre es obligatorio.</small>
+        }
+      </div>
+
+      <div class="col-6 flex flex-column gap-2">
+        <label for="presentacion" class="text-sm font-medium">Presentación</label>
+        <input pInputText id="presentacion" formControlName="presentacion" class="w-full" />
+        @if (form.controls.presentacion.invalid && form.controls.presentacion.touched) {
+          <small class="text-red-500">La presentación es obligatoria.</small>
+        }
+      </div>
+
+      <div class="col-6 flex flex-column gap-2">
+        <label for="marca" class="text-sm font-medium">Marca</label>
+        <p-select
+          inputId="marca"
+          formControlName="marcaId"
+          [options]="marcas()"
+          optionLabel="nombre"
+          optionValue="id"
+          [showClear]="true"
+          placeholder="Sin marca"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="col-6 flex flex-column gap-2">
+        <label for="precio" class="text-sm font-medium">Precio</label>
+        <p-inputNumber
+          inputId="precio"
+          formControlName="precio"
+          mode="currency" currency="ARS" locale="es-AR"
+          [min]="0" styleClass="w-full"
+        />
+        @if (form.controls.precio.invalid && form.controls.precio.touched) {
+          <small class="text-red-500">Ingresá un precio válido.</small>
+        }
+      </div>
+
+      <div class="col-6 flex flex-column gap-2">
+        <label for="stock" class="text-sm font-medium">Stock</label>
+        <p-inputNumber inputId="stock" formControlName="stock" [min]="0" [showButtons]="true" styleClass="w-full" />
+        @if (form.controls.stock.invalid && form.controls.stock.touched) {
+          <small class="text-red-500">Ingresá un stock válido.</small>
+        }
+      </div>
+
+      <div class="col-12 flex flex-column gap-2">
+        <label for="descripcion" class="text-sm font-medium">Descripción</label>
+        <textarea pInputTextarea id="descripcion" formControlName="descripcion" rows="3" class="w-full"></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+      <p-button type="submit" label="Guardar" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

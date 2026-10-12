@@ -1,0 +1,143 @@
+<p-toast />
+<p-confirmdialog />
+
+<div class="flex align-items-center justify-content-between mb-4">
+  <h2 class="m-0">Clientes</h2>
+  <p-button label="Nuevo cliente" icon="pi pi-plus" (onClick)="openCreate()" />
+</div>
+
+<p-table [value]="clientes()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
+  <ng-template #header>
+    <tr>
+      <th>Nombre</th>
+      <th>Comercio</th>
+      <th>Email</th>
+      <th>Telefono</th>
+      <th>Dirección</th>
+      <th>Estado</th>
+      <th class="text-right">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-clientes>
+    <tr>
+      <td>{{ clientes.apellido }}, {{ clientes.nombre }}</td>
+      <td>{{ clientes.comercio }}</td>
+      <td>{{ clientes.email }}</td>
+      <td>{{ clientes.telefono }}</td>
+      <td>{{ clientes.direccion }}</td>
+      <td>
+        <p-tag [value]="clientes.activo ? 'Activo' : 'Inactivo'" [severity]="clientes.activo ? 'success' : 'danger'" />
+      </td>
+      <td class="text-right">
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(clientes)" />
+        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+          [disabled]="!clientes.activo || clientes.id === currentUserId" (onClick)="confirmRemove(clientes)" />
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #emptymessage>
+    <tr>
+      <td colspan="6" class="text-center p-4">No hay clientes cargados.</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog [header]="editing() ? 'Editar cliente' : 'Nuevo cliente'" [(visible)]="dialogVisible" [modal]="true"
+  [draggable]="false" [style]="{ width: '32rem' }">
+  <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="nombre" class="text-sm font-medium">Nombre</label>
+      <input pInputText id="nombre" formControlName="nombre" class="w-full" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+      <small class="text-red-500">El nombre es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="apellido" class="text-sm font-medium">Apellido</label>
+      <input pInputText id="apellido" formControlName="apellido" class="w-full" />
+      @if (form.controls.apellido.invalid && form.controls.apellido.touched) {
+      <small class="text-red-500">El apellido es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="email" class="text-sm font-medium">Correo electrónico</label>
+      <input pInputText id="email" type="email" formControlName="email" class="w-full" />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+      <small class="text-red-500">Ingresá un correo válido.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="comercio" class="text-sm font-medium">Comercio</label>
+      <input pInputText id="comercio" formControlName="comercio" class="w-full" />
+      @if (form.controls.comercio.invalid && form.controls.comercio.touched) {
+      <small class="text-red-500">El comercio es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="telefono" class="text-sm font-medium">Teléfono</label>
+      <input pInputText id="telefono" formControlName="telefono" class="w-full" />
+      @if (form.controls.telefono.invalid && form.controls.telefono.touched) {
+      <small class="text-red-500">El teléfono es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex gap-3">
+      <div class="flex flex-column gap-2 flex-1">
+        <label for="horaAbreMat" class="text-sm font-medium">Apertura mañana</label>
+        <input pInputText type="time" id="horaAbreMat" formControlName="horaAbreMat" class="w-full" />
+      </div>
+
+      <div class="flex flex-column gap-2 flex-1">
+        <label for="horaCierreMat" class="text-sm font-medium">Cierre mañana</label>
+        <input pInputText type="time" id="horaCierreMat" formControlName="horaCierreMat" class="w-full" />
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <div class="flex flex-column gap-2 flex-1">
+        <label for="horaAbreVesp" class="text-sm font-medium">Apertura tarde</label>
+        <input pInputText type="time" id="horaAbreVesp" formControlName="horaAbreVesp" class="w-full" />
+      </div>
+
+      <div class="flex flex-column gap-2 flex-1">
+        <label for="horaCierreVesp" class="text-sm font-medium">Cierre tarde</label>
+        <input pInputText type="time" id="horaCierreVesp" formControlName="horaCierreVesp" class="w-full" />
+      </div>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Dirección</label>
+      <div class="flex gap-2">
+        <input pInputText [value]="form.controls.direccion.value" readonly class="w-full" />
+        <p-button icon="pi pi-map-marker" (onClick)="mapa.abrir()" />
+      </div>
+      @if (form.controls.direccion.invalid && form.controls.direccion.touched) {
+      <small class="text-red-500">Elegí una ubicación en el mapa.</small>
+      }
+    </div>
+
+    <app-mapa-direccion #mapa (confirmado)="onDireccionConfirmada($event)" />
+
+    @if (editing()) {
+    <div class="flex align-items-center gap-2">
+      <p-checkbox inputId="activo" formControlName="activo" [binary]="true" />
+      <label for="activo" class="text-sm font-medium">Cliente activo</label>
+    </div>
+    } @else {
+    <small class="text-color-secondary">
+      Se crea inactivo, después lo editás para activarlo.
+    </small>
+    }
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+      <p-button type="submit" label="Guardar" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>
