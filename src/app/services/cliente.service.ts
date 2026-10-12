@@ -2,12 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from './../environments/environment';
 
+export type CondicionIva = 'RESPONSABLE_INSCRIPTO' | 'MONOTRIBUTO' | 'EXENTO' | 'CONSUMIDOR_FINAL';
+
+export const CONDICIONES_IVA: { value: CondicionIva; label: string }[] = [
+  { value: 'MONOTRIBUTO', label: 'Monotributo' },
+  { value: 'RESPONSABLE_INSCRIPTO', label: 'Responsable Inscripto' },
+  { value: 'CONSUMIDOR_FINAL', label: 'Consumidor Final' },
+  { value: 'EXENTO', label: 'Exento' },
+
+];
+export type UpdateCliente = Partial<CreateCliente> & {
+  activo?: boolean;
+};
 export interface Cliente {
   id: number;
   nombre: string;
   apellido: string;
   email: string;
   comercio: string;
+  cuit: string;
+  condicionIva: CondicionIva;
   activo: boolean;
   telefono: string;
   horaAbreMat: string;
@@ -24,6 +38,8 @@ export interface CreateCliente {
   apellido: string;
   email: string;
   comercio: string;
+  cuit: string;
+  condicionIva: CondicionIva;
   telefono: string;
   horaAbreMat: string;
   horaCierreMat: string;
@@ -34,14 +50,9 @@ export interface CreateCliente {
   longitud: number;
 }
 
-export type UpdateCliente = Partial<CreateCliente> & {
-  activo?: boolean;
-};
-
 export interface CreateClienteResponse {
   message: string;
   cliente: Cliente;
-  tempPassword: string;
 }
 
 @Injectable({ providedIn: 'root' })

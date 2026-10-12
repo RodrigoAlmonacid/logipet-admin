@@ -10,6 +10,8 @@
   <ng-template #header>
     <tr>
       <th>Nombre</th>
+      <th>CUIT</th>
+      <th>Tipo IVA</th>
       <th>Comercio</th>
       <th>Email</th>
       <th>Telefono</th>
@@ -22,6 +24,8 @@
   <ng-template #body let-clientes>
     <tr>
       <td>{{ clientes.apellido }}, {{ clientes.nombre }}</td>
+      <td>{{ clientes.cuit }}</td>
+      <td>{{ etiquetaCondicionIva(clientes.condicionIva) }}</td>
       <td>{{ clientes.comercio }}</td>
       <td>{{ clientes.email }}</td>
       <td>{{ clientes.telefono }}</td>
@@ -61,6 +65,20 @@
       @if (form.controls.apellido.invalid && form.controls.apellido.touched) {
       <small class="text-red-500">El apellido es obligatorio.</small>
       }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="cuit" class="text-sm font-medium">CUIT</label>
+      <input pInputText id="cuit" formControlName="cuit" placeholder="20-12345678-9" class="w-full" />
+      @if (form.controls.cuit.invalid && form.controls.cuit.touched) {
+      <small class="text-red-500">Formato inválido (XX-XXXXXXXX-X).</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="condicionIva" class="text-sm font-medium">Condición frente al IVA</label>
+      <p-select inputId="condicionIva" formControlName="condicionIva" [options]="condicionesIva" optionLabel="label"
+        optionValue="value" placeholder="Seleccionar" styleClass="w-full" />
     </div>
 
     <div class="flex flex-column gap-2">

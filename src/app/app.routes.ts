@@ -56,13 +56,13 @@ export const routes: Routes = [
         data: { roles: ['adminUser', 'superAdmin'] }
       },
       {
-        path: 'articulos',
-        loadComponent: () => import('./view/articulos/articulos.component').then(m => m.ArticulosComponent),
+        path: 'marcas',
+        loadComponent: () => import('./view/marca/marcas.component').then(m => m.MarcasComponent),
         canActivate: [roleGuard], // protejo con roles
         data: { roles: ['adminUser', 'superAdmin'] }
       },
     ],
   },
 
-  { path: '**', redirectTo: 'login' }, // Ruta comodín
+  { path: '**', redirectTo: 'dashboard' }, // Ruta comodín
 ];
