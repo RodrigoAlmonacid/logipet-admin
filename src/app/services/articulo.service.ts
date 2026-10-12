@@ -7,6 +7,12 @@ export interface Marca {
   nombre: string;
 }
 
+export interface AlicuotaIva {
+  id: number;
+  descripcion: string;
+  porcentaje: number;
+}
+
 export interface Articulo {
   id: number;
   codigo: string;
@@ -17,6 +23,8 @@ export interface Articulo {
   stock: number;
   marcaId: number | null;
   marca: Marca | null;
+  alicuotaIvaId: number | null;
+  alicuotaIva: AlicuotaIva | null;
 }
 
 export interface CreateArticulo {
@@ -27,6 +35,7 @@ export interface CreateArticulo {
   precio: number;
   stock: number;
   marcaId?: number | null;
+  alicuotaIvaId?: number | null;
 }
 
 export type UpdateArticulo = Partial<CreateArticulo>;

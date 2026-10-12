@@ -12,13 +12,14 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../services/auth.service';
-import { Cliente, ClienteService } from '../../services/cliente.service';
 import { DireccionSeleccionada, MapaDireccionComponent } from '../../shared/components/mapa/mapa-direccion.component';
+import { CONDICIONES_IVA, Cliente, ClienteService, CondicionIva } from '../../services/cliente.service';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-clientes',
   imports: [
-    ReactiveFormsModule, TableModule, ButtonModule, DialogModule, InputTextModule,
+    ReactiveFormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule,
     MultiSelectModule, CheckboxModule, TagModule, ToastModule, ConfirmDialogModule, MapaDireccionComponent,
   ],
   providers: [MessageService, ConfirmationService],
@@ -31,6 +32,7 @@ export class ClientesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly messages = inject(MessageService);
   private readonly confirmation = inject(ConfirmationService);
+  protected readonly condicionesIva = CONDICIONES_IVA;
 
   protected readonly clientes = signal<Cliente[]>([]);
   protected readonly loading = signal(false);
@@ -44,6 +46,8 @@ export class ClientesComponent implements OnInit {
     apellido: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     comercio: ['', Validators.required],
+    cuit: ['', Validators.required],
+    condicionIva: ['CONSUMIDOR_FINAL' as CondicionIva, Validators.required],
     telefono: ['', Validators.required],
     horaAbreMat: ['', Validators.required],
     horaCierreMat: ['', Validators.required],
@@ -54,6 +58,7 @@ export class ClientesComponent implements OnInit {
     longitud: [0, Validators.required],
     activo: [true],
   });
+
   protected onDireccionConfirmada(d: DireccionSeleccionada): void {
     this.form.patchValue({
       direccion: d.direccion,
@@ -61,6 +66,11 @@ export class ClientesComponent implements OnInit {
       longitud: d.longitud,
     });
   }
+
+  protected etiquetaCondicionIva(valor: CondicionIva): string {
+    return this.condicionesIva.find((c) => c.value === valor)?.label ?? valor;
+  }
+
   ngOnInit(): void {
     this.load();
     this.clienteService.list().subscribe({
@@ -85,7 +95,7 @@ export class ClientesComponent implements OnInit {
 
   protected openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ nombre: '', apellido: '', email: '', comercio: '', telefono: '', horaAbreMat: '', horaCierreMat: '', horaAbreVesp: '', horaCierreVesp: '', direccion: '',latitud: 0, longitud: 0, activo: true });
+    this.form.reset({ nombre: '', apellido: '', email: '', comercio: '', telefono: '', cuit: '', horaAbreMat: '', horaCierreMat: '', horaAbreVesp: '', horaCierreVesp: '', direccion: '', latitud: 0, longitud: 0, activo: true });
     this.dialogVisible.set(true);
   }
 
@@ -96,6 +106,7 @@ export class ClientesComponent implements OnInit {
       apellido: cliente.apellido,
       email: cliente.email,
       comercio: cliente.comercio,
+      cuit: cliente.cuit,
       telefono: cliente.telefono,
       horaAbreMat: cliente.horaAbreMat,
       horaCierreMat: cliente.horaCierreMat,
@@ -115,13 +126,13 @@ export class ClientesComponent implements OnInit {
       return;
     }
 
-    const { nombre, apellido, email, comercio, telefono, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud } = this.form.getRawValue();
+    const { nombre, apellido, email, comercio, telefono, cuit, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud } = this.form.getRawValue();
     const current = this.editing();
     this.saving.set(true);
 
     if (current) {
       this.clienteService
-        .update(current.id, { nombre, apellido, email, comercio, telefono, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud })
+        .update(current.id, { nombre, apellido, email, comercio, telefono, cuit, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud })
         .subscribe({
           next: () => {
             this.afterSave();
@@ -133,7 +144,7 @@ export class ClientesComponent implements OnInit {
           },
         });
     } else {
-      this.clienteService.create({ nombre, apellido, email, comercio, telefono, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud }).subscribe({
+      this.clienteService.create({ nombre, apellido, email, comercio, telefono, cuit, condicionIva: CONDICIONES_IVA[0].value, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud }).subscribe({
         next: (res) => {
           this.afterSave();
           this.messages.add({

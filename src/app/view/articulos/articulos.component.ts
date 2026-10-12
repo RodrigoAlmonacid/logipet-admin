@@ -15,6 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { Observable } from 'rxjs';
 import { Articulo, ArticuloService } from '../../services/articulo.service';
 import { Marca, MarcaService } from '../../services/marca.service';
+import { AlicuotaIvaService, AlicuotaIva } from '../../services/alicuotaIva.service';
 
 @Component({
   selector: 'app-articulos',
@@ -33,7 +34,9 @@ export class ArticulosComponent implements OnInit {
   private readonly marcaService = inject(MarcaService);
   private readonly messages = inject(MessageService);
   private readonly confirmation = inject(ConfirmationService);
+  private readonly alicuotaIvaService = inject(AlicuotaIvaService);
 
+  protected readonly alicuotasIva = signal<AlicuotaIva[]>([]);
   protected readonly articulos = signal<Articulo[]>([]);
   protected readonly marcas = signal<Marca[]>([]);
   protected readonly loading = signal(false);
@@ -54,12 +57,17 @@ export class ArticulosComponent implements OnInit {
     precio: [0, [Validators.required, Validators.min(0)]],
     stock: [0, [Validators.required, Validators.min(0)]],
     marcaId: [null as number | null],
+    alicuotaIvaId: [null as number | null],
   });
 
   ngOnInit(): void {
     this.load();
     this.marcaService.list().subscribe({
       next: (data) => this.marcas.set(data),
+      error: (err) => this.showError(err),
+    });
+    this.alicuotaIvaService.list().subscribe({
+      next: (data) => this.alicuotasIva.set(data),
       error: (err) => this.showError(err),
     });
   }
@@ -82,7 +90,7 @@ export class ArticulosComponent implements OnInit {
     this.editing.set(null);
     this.form.reset({
       codigo: '', nombre: '', presentacion: '', descripcion: '',
-      precio: 0, stock: 0, marcaId: null,
+      precio: 0, stock: 0, marcaId: null, alicuotaIvaId: null
     });
     this.dialogVisible.set(true);
   }
@@ -97,6 +105,7 @@ export class ArticulosComponent implements OnInit {
       precio: art.precio,
       stock: art.stock,
       marcaId: art.marcaId,
+      alicuotaIvaId: art.alicuotaIvaId ?? null,
     });
     this.dialogVisible.set(true);
   }

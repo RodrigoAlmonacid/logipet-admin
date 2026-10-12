@@ -15,6 +15,7 @@
       <th>Descripción</th>
       <th>Presentación</th>
       <th>Precio</th>
+      <th>IVA (alicuota)</th>
       <th>Stock</th>
       <th class="text-right">Acciones</th>
     </tr>
@@ -28,6 +29,7 @@
       <td>{{ articulo.descripcion }}</td>
       <td>{{ articulo.presentacion }}</td>
       <td>{{ articulo.precio | currency }}</td>
+      <td>{{ articulo.alicuotaIva?.porcentaje ?? '—' }} % ({{ articulo.alicuotaIva?.descripcion ?? '—' }})</td>
       <td>{{ articulo.stock }}</td>
       <td class="text-right">
         <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(articulo)" />
@@ -51,7 +53,7 @@
       <label for="nombre" class="text-sm font-medium">Nombre</label>
       <input pInputText id="nombre" formControlName="nombre" class="w-full" />
       @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
-        <small class="text-red-500">El nombre es obligatorio.</small>
+      <small class="text-red-500">El nombre es obligatorio.</small>
       }
     </div>
 
@@ -59,25 +61,15 @@
       <label for="codigo" class="text-sm font-medium">Código</label>
       <input pInputText id="codigo" formControlName="codigo" class="w-full" />
       @if (form.controls.codigo.invalid && form.controls.codigo.touched) {
-        <small class="text-red-500">El código es obligatorio.</small>
+      <small class="text-red-500">El código es obligatorio.</small>
       }
     </div>
 
     <div class="flex flex-column gap-2">
       <label for="marcaId" class="text-sm font-medium">Marca</label>
       <div class="flex gap-2">
-        <p-select
-          inputId="marcaId"
-          formControlName="marcaId"
-          [options]="marcas()"
-          optionLabel="nombre"
-          optionValue="id"
-          [filter]="true"
-          filterBy="nombre"
-          placeholder="Sin marca"
-          [showClear]="true"
-          styleClass="w-full"
-        />
+        <p-select inputId="marcaId" formControlName="marcaId" [options]="marcas()" optionLabel="nombre" optionValue="id"
+          [filter]="true" filterBy="nombre" placeholder="Sin marca" [showClear]="true" styleClass="w-full" />
         <p-button icon="pi pi-plus" [text]="true" (onClick)="abrirNuevaMarca()" pTooltip="Crear marca nueva" />
       </div>
     </div>
@@ -86,7 +78,7 @@
       <label for="descripcion" class="text-sm font-medium">Descripción</label>
       <input pInputText id="descripcion" formControlName="descripcion" class="w-full" />
       @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
-        <small class="text-red-500">La descripción es obligatoria.</small>
+      <small class="text-red-500">La descripción es obligatoria.</small>
       }
     </div>
 
@@ -94,7 +86,7 @@
       <label for="presentacion" class="text-sm font-medium">Presentación</label>
       <input pInputText id="presentacion" formControlName="presentacion" class="w-full" />
       @if (form.controls.presentacion.invalid && form.controls.presentacion.touched) {
-        <small class="text-red-500">La presentación es obligatoria.</small>
+      <small class="text-red-500">La presentación es obligatoria.</small>
       }
     </div>
 
@@ -103,15 +95,25 @@
         <label for="precio" class="text-sm font-medium">Precio</label>
         <input pInputText type="number" id="precio" formControlName="precio" class="w-full" />
         @if (form.controls.precio.invalid && form.controls.precio.touched) {
-          <small class="text-red-500">El precio es obligatorio.</small>
+        <small class="text-red-500">El precio es obligatorio.</small>
         }
       </div>
+    </div>
 
+    <div class="flex flex-column gap-2">
+      <label for="alicuotaIvaId" class="text-sm font-medium">IVA</label>
+      <div class="flex gap-2">
+        <p-select inputId="alicuotaIvaId" formControlName="alicuotaIvaId" [options]="alicuotasIva()" optionLabel="descripcion" optionValue="id"
+          [filter]="true" filterBy="descripcion" placeholder="Sin IVA" [showClear]="true" styleClass="w-full" />
+      </div>
+    </div>
+
+    <div class="flex gap-3">
       <div class="flex flex-column gap-2 flex-1">
         <label for="stock" class="text-sm font-medium">Stock</label>
         <input pInputText type="number" id="stock" formControlName="stock" class="w-full" />
         @if (form.controls.stock.invalid && form.controls.stock.touched) {
-          <small class="text-red-500">El stock es obligatorio.</small>
+        <small class="text-red-500">El stock es obligatorio.</small>
         }
       </div>
     </div>
