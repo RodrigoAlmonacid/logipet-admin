@@ -12,6 +12,7 @@ export interface Empleado {
   id: number;
   nombre: string;
   apellido: string;
+  cuil: string;
   email: string;
   legajo: string;
   activo: boolean;
@@ -21,6 +22,7 @@ export interface Empleado {
 export interface CreateEmpleado {
   nombre: string;
   apellido: string;
+  cuil: string;
   email: string;
   legajo: string;
 }
