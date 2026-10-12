@@ -120,7 +120,6 @@ export class EmpleadosComponent implements OnInit {
           this.messages.add({
             severity: 'success',
             summary: 'Empleado creado',
-            detail: `Contraseña provisoria: ${res.tempPassword}`,
             sticky: true,
           });
         },
