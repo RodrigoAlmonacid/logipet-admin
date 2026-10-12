@@ -1,24 +1,27 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
-import { SelectModule } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
+import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
-import { AuthService } from '../../services/auth.service';
+import { Observable } from 'rxjs';
 import { Articulo, ArticuloService } from '../../services/articulo.service';
 import { Marca, MarcaService } from '../../services/marca.service';
-import { CurrencyPipe } from '@angular/common'
 
 @Component({
   selector: 'app-articulos',
   imports: [
-    ReactiveFormsModule, TableModule, ButtonModule, DialogModule, InputTextModule,
-    SelectModule, ToastModule, ConfirmDialogModule, FormsModule, CurrencyPipe
+    ReactiveFormsModule, FormsModule, TableModule, ButtonModule, DialogModule,
+    InputTextModule, InputNumberModule, SelectModule, TextareaModule,
+    ToastModule, ConfirmDialogModule, CurrencyPipe,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './articulos.component.html',
@@ -28,7 +31,6 @@ export class ArticulosComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly articuloService = inject(ArticuloService);
   private readonly marcaService = inject(MarcaService);
-  private readonly auth = inject(AuthService);
   private readonly messages = inject(MessageService);
   private readonly confirmation = inject(ConfirmationService);
 
@@ -45,11 +47,11 @@ export class ArticulosComponent implements OnInit {
   protected nuevaMarcaNombre = '';
 
   protected readonly form = this.fb.nonNullable.group({
-    nombre: ['', Validators.required],
     codigo: ['', Validators.required],
-    precio: [0, [Validators.required, Validators.min(0)]],
+    nombre: ['', Validators.required],
     presentacion: ['', Validators.required],
-    descripcion: ['', Validators.required],
+    descripcion: [''],
+    precio: [0, [Validators.required, Validators.min(0)]],
     stock: [0, [Validators.required, Validators.min(0)]],
     marcaId: [null as number | null],
   });
@@ -57,7 +59,7 @@ export class ArticulosComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.marcaService.list().subscribe({
-      next: (marcas) => this.marcas.set(marcas),
+      next: (data) => this.marcas.set(data),
       error: (err) => this.showError(err),
     });
   }
@@ -78,20 +80,23 @@ export class ArticulosComponent implements OnInit {
 
   protected openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ nombre: '', codigo: '', precio: 0, presentacion: '', descripcion: '', stock: 0, marcaId: null });
+    this.form.reset({
+      codigo: '', nombre: '', presentacion: '', descripcion: '',
+      precio: 0, stock: 0, marcaId: null,
+    });
     this.dialogVisible.set(true);
   }
 
-  protected openEdit(articulo: Articulo): void {
-    this.editing.set(articulo);
+  protected openEdit(art: Articulo): void {
+    this.editing.set(art);
     this.form.reset({
-      nombre: articulo.nombre,
-      codigo: articulo.codigo,
-      precio: articulo.precio,
-      presentacion: articulo.presentacion,
-      descripcion: articulo.descripcion,
-      stock: articulo.stock,
-      marcaId: articulo.marca?.id ?? null,
+      codigo: art.codigo,
+      nombre: art.nombre,
+      presentacion: art.presentacion,
+      descripcion: art.descripcion ?? '',
+      precio: art.precio,
+      stock: art.stock,
+      marcaId: art.marcaId,
     });
     this.dialogVisible.set(true);
   }
@@ -102,35 +107,33 @@ export class ArticulosComponent implements OnInit {
       return;
     }
 
-    const { nombre, codigo, precio, presentacion, descripcion, stock, marcaId } = this.form.getRawValue();
+    const v = this.form.getRawValue();
+    const dto = {
+      ...v,
+      descripcion: v.descripcion?.trim() ? v.descripcion : null,
+    };
     const current = this.editing();
     this.saving.set(true);
 
-    if (current) {
-      this.articuloService
-        .update(current.id, { nombre, codigo, precio, presentacion, descripcion, stock, marcaId })
-        .subscribe({
-          next: () => {
-            this.afterSave();
-            this.messages.add({ severity: 'success', summary: 'Artículo actualizado' });
-          },
-          error: (err) => {
-            this.saving.set(false);
-            this.showError(err);
-          },
+    const req$: Observable<unknown> = current
+      ? this.articuloService.update(current.id, dto)
+      : this.articuloService.create(dto);
+
+    req$.subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.dialogVisible.set(false);
+        this.messages.add({
+          severity: 'success',
+          summary: current ? 'Artículo actualizado' : 'Artículo creado',
         });
-    } else {
-      this.articuloService.create({ nombre, codigo, precio, presentacion, descripcion, stock, marcaId }).subscribe({
-        next: () => {
-          this.afterSave();
-          this.messages.add({ severity: 'success', summary: 'Artículo creado' });
-        },
-        error: (err) => {
-          this.saving.set(false);
-          this.showError(err);
-        },
-      });
-    }
+        this.load();
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.showError(err);
+      },
+    });
   }
 
   // --- Alta rápida de marca, sin salir del formulario de artículo ---
@@ -165,7 +168,7 @@ export class ArticulosComponent implements OnInit {
   protected confirmRemove(art: Articulo): void {
     this.confirmation.confirm({
       header: 'Dar de baja',
-      message: `¿Dar de baja a ${art.nombre}?`,
+      message: `¿Dar de baja "${art.nombre}" (${art.codigo})?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Dar de baja',
       rejectLabel: 'Cancelar',
@@ -179,12 +182,6 @@ export class ArticulosComponent implements OnInit {
           error: (err) => this.showError(err),
         }),
     });
-  }
-
-  private afterSave(): void {
-    this.saving.set(false);
-    this.dialogVisible.set(false);
-    this.load();
   }
 
   private showError(err: HttpErrorResponse): void {

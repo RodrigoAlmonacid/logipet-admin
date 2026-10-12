@@ -11,8 +11,7 @@ export interface CreateMarca {
   nombre: string;
 }
 
-export type UpdateMarca = Partial<CreateMarca> & {
-};
+export type UpdateMarca = Partial<CreateMarca>;
 
 export interface CreateMarcaResponse {
   message: string;
@@ -33,7 +32,7 @@ export class MarcaService {
   }
 
   update(id: number, dto: UpdateMarca) {
-    return this.http.patch<CreateMarcaResponse>(`${this.url}/${id}`, dto);
+    return this.http.patch<Marca>(`${this.url}/${id}`, dto);
   }
 
   remove(id: number) {

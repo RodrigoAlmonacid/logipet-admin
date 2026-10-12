@@ -10,20 +10,21 @@ export interface Marca {
 export interface Articulo {
   id: number;
   codigo: string;
-  precio: number;
-  presentacion: string;
-  descripcion: string;
   nombre: string;
+  presentacion: string;
+  descripcion: string | null;
+  precio: number;
   stock: number;
+  marcaId: number | null;
   marca: Marca | null;
 }
 
 export interface CreateArticulo {
   codigo: string;
-  precio: number;
-  presentacion: string;
-  descripcion: string;
   nombre: string;
+  presentacion: string;
+  descripcion?: string | null;
+  precio: number;
   stock: number;
   marcaId?: number | null;
 }
