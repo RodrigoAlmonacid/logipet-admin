@@ -43,6 +43,7 @@ export class EmpleadosComponent implements OnInit {
     nombre: ['', Validators.required],
     apellido: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
+    cuil: ['', Validators.required],
     legajo: ['', Validators.required],
     activo: [true],
     roleIds: [[] as number[]],
@@ -72,7 +73,7 @@ export class EmpleadosComponent implements OnInit {
 
   protected openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ nombre: '', apellido: '', email: '', legajo: '', activo: true, roleIds: [] });
+    this.form.reset({ nombre: '', apellido: '', email: '', cuil: '', legajo: '', activo: true, roleIds: [] });
     this.dialogVisible.set(true);
   }
 
@@ -82,6 +83,7 @@ export class EmpleadosComponent implements OnInit {
       nombre: emp.nombre,
       apellido: emp.apellido,
       email: emp.email,
+      cuil: emp.cuil,
       legajo: emp.legajo,
       activo: emp.activo,
       roleIds: emp.roles.map((r) => r.id),
@@ -95,13 +97,13 @@ export class EmpleadosComponent implements OnInit {
       return;
     }
 
-    const { nombre, apellido, email, legajo, activo, roleIds } = this.form.getRawValue();
+    const { nombre, apellido, email, legajo, cuil, activo, roleIds } = this.form.getRawValue();
     const current = this.editing();
     this.saving.set(true);
 
     if (current) {
       this.empleadoService
-        .update(current.id, { nombre, apellido, email, legajo, activo, roleIds })
+        .update(current.id, { nombre, apellido, email, legajo, cuil, activo, roleIds })
         .subscribe({
           next: () => {
             this.afterSave();
@@ -113,7 +115,7 @@ export class EmpleadosComponent implements OnInit {
           },
         });
     } else {
-      this.empleadoService.create({ nombre, apellido, email, legajo }).subscribe({
+      this.empleadoService.create({ nombre, apellido, email, legajo, cuil }).subscribe({
         next: (res) => {
           this.afterSave();
           // Temporal, hasta que esté el envío por mail

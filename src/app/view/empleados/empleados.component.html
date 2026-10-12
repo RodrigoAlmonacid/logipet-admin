@@ -10,6 +10,7 @@
   <ng-template #header>
     <tr>
       <th>Legajo</th>
+      <th>Cuil</th>
       <th>Nombre</th>
       <th>Email</th>
       <th>Roles</th>
@@ -21,6 +22,7 @@
   <ng-template #body let-emp>
     <tr>
       <td>{{ emp.legajo }}</td>
+      <td>{{ emp.cuil }}</td>
       <td>{{ emp.apellido }}, {{ emp.nombre }}</td>
       <td>{{ emp.email }}</td>
       <td>
@@ -91,6 +93,14 @@
       <input pInputText id="legajo" formControlName="legajo" class="w-full" />
       @if (form.controls.legajo.invalid && form.controls.legajo.touched) {
         <small class="text-red-500">El legajo es obligatorio.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="cuil" class="text-sm font-medium">CUIL</label>
+      <input pInputText id="cuil" formControlName="cuil" class="w-full" />
+      @if (form.controls.cuil.invalid && form.controls.cuil.touched) {
+        <small class="text-red-500">El CUIL es obligatorio.</small>
       }
     </div>
 
