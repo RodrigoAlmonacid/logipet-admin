@@ -23,6 +23,14 @@ export interface LoginResponse {
   user: EmpleadoAutenticado;
 }
 
+interface JwtPayload {
+  sub: number;
+  email: string;
+  roles: string[];
+  permisos: string[];
+  exp: number;
+}
+
 const TOKEN_KEY = 'logipet_token';
 const USER_KEY = 'logipet_user';
 
@@ -94,13 +102,27 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<{ message: string }> {
-  return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/forgot-password`, { email });
-}
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/forgot-password`, { email });
+  }
 
-resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
-  return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/reset-password`, {
-    token,
-    newPassword,
-  });
-}
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/reset-password`, {
+      token,
+      newPassword,
+    });
+  }
+
+  permisos(): string[] {
+    const token = this.getToken();
+    return token ? (jwtDecode<JwtPayload>(token).permisos) : [];
+  }
+
+  hasPermission(permiso: string): boolean {
+    return this.permisos().includes(permiso);
+  }
+
+  hasAnyPermission(permisos: string[]): boolean {
+    const mios = this.permisos();
+    return permisos.some((p) => mios.includes(p));
+  }
 }

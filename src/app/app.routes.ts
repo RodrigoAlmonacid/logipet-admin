@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './layouts/public-layout/public-layout.component';
 import { PrivateLayoutComponent } from './layouts/private-layout/private-layout.component';
 import { authGuard } from './guards/auth.guard';
-import { roleGuard } from './guards/role.guard';
+import { permissionGuard } from './guards/permission.guard';
 
 export const routes: Routes = [
   {
@@ -40,26 +40,32 @@ export const routes: Routes = [
       {
         path: 'empleados',
         loadComponent: () => import('./view/empleados/empleados.component').then(m => m.EmpleadosComponent),
-        canActivate: [roleGuard], // protejo con roles
-        data: { roles: ['adminUser', 'superAdmin'] }
+        canActivate: [permissionGuard], // protejo con roles
+        data: { permissions: ['empleado:view'] }
       },
       {
         path: 'clientes',
         loadComponent: () => import('./view/clientes/clientes.component').then(m => m.ClientesComponent),
-        canActivate: [roleGuard], // protejo con roles
-        data: { roles: ['adminUser', 'superAdmin'] }
+        canActivate: [permissionGuard], // protejo con roles
+        data: { permissions: ['cliente:view'] }
       },
       {
         path: 'articulos',
         loadComponent: () => import('./view/articulos/articulos.component').then(m => m.ArticulosComponent),
-        canActivate: [roleGuard], // protejo con roles
-        data: { roles: ['adminUser', 'superAdmin'] }
+        canActivate: [permissionGuard], // protejo con roles
+        data: { permissions: ['articulo:view'] }
       },
       {
         path: 'marcas',
         loadComponent: () => import('./view/marca/marcas.component').then(m => m.MarcasComponent),
-        canActivate: [roleGuard], // protejo con roles
-        data: { roles: ['adminUser', 'superAdmin'] }
+        canActivate: [permissionGuard], // protejo con roles
+        data: { permissions: ['marca:view'] }
+      },
+      {
+        path: 'roles',
+        loadComponent: () => import('./view/roles/roles.component').then(m => m.RolesComponent),
+        canActivate: [permissionGuard], // protejo con roles
+        data: { permissions: ['rol:manage'] }
       },
     ],
   },

@@ -69,7 +69,7 @@
       <label for="marcaId" class="text-sm font-medium">Marca</label>
       <div class="flex gap-2">
         <p-select inputId="marcaId" formControlName="marcaId" [options]="marcas()" optionLabel="nombre" optionValue="id"
-          [filter]="true" filterBy="nombre" placeholder="Sin marca" [showClear]="true" styleClass="w-full" />
+          [filter]="true" filterBy="nombre" placeholder="Sin marca" [showClear]="true" styleClass="w-full" [appendTo]="'body'" />
         <p-button icon="pi pi-plus" [text]="true" (onClick)="abrirNuevaMarca()" pTooltip="Crear marca nueva" />
       </div>
     </div>
