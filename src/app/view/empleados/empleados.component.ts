@@ -13,6 +13,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../services/auth.service';
 import { Empleado, EmpleadoService, Rol } from '../../services/empleado.service';
+import { permissionsFor } from '../../helpers/permission-for';
 
 @Component({
   selector: 'app-empleados',
@@ -38,6 +39,9 @@ export class EmpleadosComponent implements OnInit {
   protected readonly dialogVisible = signal(false);
   protected readonly editing = signal<Empleado | null>(null);
   protected readonly currentUserId = this.auth.currentUser()?.id;
+
+  protected readonly permisoEmpleado = permissionsFor('empleado');
+  protected readonly permisoRol = permissionsFor('rol');
 
   protected readonly form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],
@@ -72,12 +76,14 @@ export class EmpleadosComponent implements OnInit {
   }
 
   protected openCreate(): void {
+    if (!this.permisoEmpleado.canCreate()) return;
     this.editing.set(null);
     this.form.reset({ nombre: '', apellido: '', email: '', cuil: '', legajo: '', activo: true, roleIds: [] });
     this.dialogVisible.set(true);
   }
 
   protected openEdit(emp: Empleado): void {
+    if (!this.permisoEmpleado.canUpdate()) return;
     this.editing.set(emp);
     this.form.reset({
       nombre: emp.nombre,
@@ -92,6 +98,12 @@ export class EmpleadosComponent implements OnInit {
   }
 
   protected save(): void {
+
+    const allowed = this.editing()
+      ? this.permisoEmpleado.canUpdate()
+      : this.permisoEmpleado.canCreate();
+    if (!allowed) return;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -134,6 +146,7 @@ export class EmpleadosComponent implements OnInit {
   }
 
   protected confirmRemove(emp: Empleado): void {
+    if (!this.permisoEmpleado.canDelete()) return;
     this.confirmation.confirm({
       header: 'Dar de baja',
       message: `¿Dar de baja a ${emp.nombre} ${emp.apellido}? No podrá iniciar sesión hasta que lo reactives.`,

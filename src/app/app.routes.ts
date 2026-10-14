@@ -67,6 +67,12 @@ export const routes: Routes = [
         canActivate: [permissionGuard], // protejo con roles
         data: { permissions: ['rol:manage'] }
       },
+      {
+        path: 'pedidos',
+        loadComponent: () => import('./view/pedido/pedidos.component').then(m => m.PedidosComponent),
+        canActivate: [permissionGuard], // protejo con roles
+        data: { permissions: ['pedido:view'] }
+      },
     ],
   },
 

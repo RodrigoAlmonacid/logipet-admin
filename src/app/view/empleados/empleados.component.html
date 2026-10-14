@@ -3,7 +3,9 @@
 
 <div class="flex align-items-center justify-content-between mb-4">
   <h2 class="m-0">Empleados</h2>
+  @if (permisoEmpleado.canCreate()){
   <p-button label="Nuevo empleado" icon="pi pi-plus" (onClick)="openCreate()" />
+  }
 </div>
 
 <p-table [value]="empleados()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
@@ -15,7 +17,9 @@
       <th>Email</th>
       <th>Roles</th>
       <th>Estado</th>
+      @if (permisoEmpleado.hasRowActions()){
       <th class="text-right">Acciones</th>
+      }
     </tr>
   </ng-template>
 
@@ -37,17 +41,18 @@
       <td>
         <p-tag [value]="emp.activo ? 'Activo' : 'Inactivo'" [severity]="emp.activo ? 'success' : 'danger'" />
       </td>
+      @if (permisoEmpleado.hasRowActions()){
       <td class="text-right">
-        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(emp)" />
-        <p-button
+        @if (permisoEmpleado.canUpdate()){<p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(emp)" />}
+        @if (permisoEmpleado.canDelete()){<p-button
           icon="pi pi-trash"
           severity="danger"
           [text]="true"
           [rounded]="true"
           [disabled]="!emp.activo || emp.id === currentUserId"
           (onClick)="confirmRemove(emp)"
-        />
-      </td>
+        />}
+      </td>}
     </tr>
   </ng-template>
 
@@ -107,6 +112,7 @@
     @if (editing()) {
       <div class="flex flex-column gap-2">
         <label for="roles" class="text-sm font-medium">Roles</label>
+        @if (permisoRol.canView()){
         <p-multiselect
           inputId="roles"
           formControlName="roleIds"
@@ -117,6 +123,9 @@
           styleClass="w-full"
           [appendTo]="'body'"
         />
+        } @else {
+          <small>No posee permiso para ver los roles, comuníquese con un administrador.</small>
+        }
       </div>
 
       <div class="flex align-items-center gap-2">
