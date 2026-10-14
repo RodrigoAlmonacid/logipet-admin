@@ -13,6 +13,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../services/auth.service';
 import { Marca, MarcaService } from '../../services/marca.service';
+import { permissionsFor } from '../../helpers/permission-for';
 
 @Component({
   selector: 'app-marcas',
@@ -37,6 +38,7 @@ export class MarcasComponent implements OnInit {
   protected readonly dialogVisible = signal(false);
   protected readonly editing = signal<Marca | null>(null);
   protected readonly currentUserId = this.auth.currentUser()?.id;
+  protected readonly permisoMarca = permissionsFor('marca');
 
   protected readonly form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],
@@ -65,12 +67,14 @@ export class MarcasComponent implements OnInit {
   }
 
   protected openCreate(): void {
+    if (!this.permisoMarca.canCreate()) return;
     this.editing.set(null);
     this.form.reset({ nombre: '' });
     this.dialogVisible.set(true);
   }
 
   protected openEdit(marca: Marca): void {
+    if (!this.permisoMarca.canUpdate()) return;
     this.editing.set(marca);
     this.form.reset({
       nombre: marca.nombre,
@@ -79,6 +83,12 @@ export class MarcasComponent implements OnInit {
   }
 
   protected save(): void {
+    
+    const allowed = this.editing()
+      ? this.permisoMarca.canUpdate()
+      : this.permisoMarca.canCreate();
+    if (!allowed) return;
+    
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

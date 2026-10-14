@@ -26,10 +26,11 @@ protected readonly menuItems: MenuItem[] = [
   { label: 'Artículos', icon: 'pi pi-box', route: '/articulos', permiso: 'articulo:view' },
   { label: 'Marcas', icon: 'pi pi-tags', route: '/marcas', permiso: 'marca:view' },
   { label: 'Roles', icon: 'pi pi-shield', route: '/roles', permiso: 'rol:manage' },
+  { label: 'Pedidos', icon: 'pi pi-shopping-bag', route: '/pedidos', permiso: 'pedido:view' },
 ];
 
 protected readonly menuVisible = computed(() =>
-  this.menuItems.filter((item) => !item.permiso || this.auth.hasPermission(item.permiso)),
+  this.menuItems.filter((item) => !item.permiso || this.auth.can(item.permiso)),
 );
 
 protected onLinkClick(): void {
