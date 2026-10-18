@@ -27,6 +27,8 @@ export interface Pedido {
   articulos: DetallePedido[];
   historialEstados: EstadoPedido[];
   stockDescontado: boolean;
+  lineas: LineaCalculada[];
+  totales: Totales;
 }
 
 export interface LineaCalculada {
@@ -41,6 +43,12 @@ export interface LineaCalculada {
   importeNeto: number;
   importeIva: number;
   importeFinal: number;
+}
+
+export interface Totales {
+  neto: number;
+  iva: number;
+  final: number;
 }
 
 export interface ItemPedido {
