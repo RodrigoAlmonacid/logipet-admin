@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
-import { environment } from './../environments/environment';
+import { environment } from './../../environments/environment';
 
 export interface LoginRequest {
   email: string;
