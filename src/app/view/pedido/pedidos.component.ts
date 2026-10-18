@@ -13,7 +13,7 @@ import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../services/auth.service';
 import { Articulo, ArticuloService } from '../../services/articulo.service';
 import { Cliente, ClienteService } from '../../services/cliente.service';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import {
   Pedido, ItemPedido, PedidoService, estadoActual, puedeCancelar, puedeConfirmar, puedeEditar,
   esBorrador,
@@ -78,10 +78,10 @@ const PESTANAS: { vista: Vista; label: string; permisos: string[] }[] = [
 @Component({
   selector: 'app-pedidos',
   imports: [
-  ReactiveFormsModule, TableModule, ButtonModule, DialogModule, CurrencyPipe,
-  SelectModule, InputNumberModule, TagModule, ToastModule, ConfirmDialogModule,
-  TabsModule, TooltipModule, TextareaModule,
-],
+    ReactiveFormsModule, TableModule, ButtonModule, DialogModule, CurrencyPipe, DatePipe,
+    SelectModule, InputNumberModule, TagModule, ToastModule, ConfirmDialogModule,
+    TabsModule, TooltipModule, TextareaModule,
+  ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './pedidos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -142,6 +142,7 @@ export class PedidosComponent implements OnInit {
 
   protected readonly pestanas = computed(() => PESTANAS.filter((t) => this.auth.canAny(t.permisos)));
   protected readonly vistaActiva = signal<Vista | null>(null);
+  protected readonly viendo = signal<Pedido | null>(null);
 
   ngOnInit(): void {
     const primera = this.pestanas()[0];
@@ -158,6 +159,10 @@ export class PedidosComponent implements OnInit {
       });
     }
     if (arma || this.permisoPedido.canConfirm()) this.cargarArticulos();
+  }
+
+  protected verDetalle(pedido: Pedido): void {
+    this.viendo.set(pedido);
   }
 
   protected cambiarVista(v: string | number | undefined): void {
@@ -222,6 +227,11 @@ export class PedidosComponent implements OnInit {
     const id = this.items.at(i).controls.articuloId.value;
     return this.articulos().find((a) => a.id === id)?.stock ?? null;
   }
+
+  protected stockPendiente(pedido: Pedido, articuloId: number): number | null {
+  if (estadoActual(pedido) !== 'pendiente') return null;
+  return pedido.articulos.find((d) => d.articuloId === articuloId)?.articulo.stock ?? null;
+}
 
   protected openCreate(): void {
     this.editing.set(null);
@@ -393,6 +403,7 @@ export class PedidosComponent implements OnInit {
             this.messages.add({ severity: 'success', summary: 'Pedido aprobado' });
             this.load();
             this.cargarArticulos();
+            this.viendo.set(null);
           },
           error: (err) => this.showError(err),
         }),
@@ -415,6 +426,7 @@ export class PedidosComponent implements OnInit {
         this.rechazando.set(null);
         this.messages.add({ severity: 'success', summary: 'Pedido rechazado' });
         this.load();
+        this.viendo.set(null);
       },
       error: (err) => this.showError(err),
     });
