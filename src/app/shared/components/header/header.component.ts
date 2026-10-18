@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, output, Output } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { ButtonModule } from 'primeng/button';
 
@@ -10,11 +10,7 @@ import { ButtonModule } from 'primeng/button';
 })
 export class HeaderComponent {
 
-  @Input() mobileMenuOpen: boolean = false;
+  readonly menuToggle = output<void>();
   protected readonly auth = inject(AuthService);
-
-  protected onLogout(): void {
-    this.auth.logout();
-  }
-
+  
 }
