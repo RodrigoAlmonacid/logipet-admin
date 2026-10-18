@@ -3,25 +3,30 @@
 
 <div class="flex align-items-center justify-content-between mb-4">
   <h2 class="m-0">Marcas</h2>
-  <p-button label="Nueva marca" icon="pi pi-plus" (onClick)="openCreate()" />
+  @if (permisoMarca.canCreate()) { <p-button label="Nueva marca" icon="pi pi-plus" (onClick)="openCreate()" /> }
 </div>
 
 <p-table [value]="marcas()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
   <ng-template #header>
     <tr>
       <th>Nombre</th>
+      @if (permisoMarca.hasRowActions()) {
       <th class="text-right">Acciones</th>
+      }
     </tr>
   </ng-template>
 
   <ng-template #body let-marca>
     <tr>
       <td>{{ marca.nombre }}</td>
+      @if (permisoMarca.hasRowActions()) {
       <td class="text-right">
-        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(marca)" />
-        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-          (onClick)="confirmRemove(marca)" />
+        @if (permisoMarca.canUpdate()) { <p-button icon="pi pi-pencil" [text]="true" [rounded]="true"
+          (onClick)="openEdit(marca)" /> }
+        @if (permisoMarca.canDelete()) { <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+          (onClick)="confirmRemove(marca)" /> }
       </td>
+    }
     </tr>
   </ng-template>
 
@@ -49,4 +54,3 @@
     </div>
   </form>
 </p-dialog>
-

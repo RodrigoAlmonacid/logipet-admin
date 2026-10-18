@@ -23,6 +23,14 @@ export interface LoginResponse {
   user: EmpleadoAutenticado;
 }
 
+interface JwtPayload {
+  sub: number;
+  email: string;
+  roles: string[];
+  permisos: string[];
+  exp: number;
+}
+
 const TOKEN_KEY = 'logipet_token';
 const USER_KEY = 'logipet_user';
 
@@ -46,6 +54,7 @@ export class AuthService {
       tap((response) => {
         localStorage.setItem(TOKEN_KEY, response.access_token);
         localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+        this._permisos.set(this.readPermisosFromToken());
         this._currentUser.set(response.user);
         this._isAuthenticated.set(true);
       }),
@@ -60,6 +69,7 @@ export class AuthService {
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    this._permisos.set([]);
     this._isAuthenticated.set(false);
     this._currentUser.set(null);
   }
@@ -85,6 +95,10 @@ export class AuthService {
     return required.some((r) => mine.includes(r));
   }
 
+  userId(): number | null {
+    return this._currentUser()?.id ?? null;
+  }
+
   private readStoredUser(): EmpleadoAutenticado | null {
     try {
       return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null');
@@ -94,13 +108,60 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<{ message: string }> {
-  return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/forgot-password`, { email });
-}
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/forgot-password`, { email });
+  }
 
-resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
-  return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/reset-password`, {
-    token,
-    newPassword,
-  });
-}
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/reset-password`, {
+      token,
+      newPassword,
+    });
+  }
+
+  // --- estado de permisos ---
+  private readonly _permisos = signal<string[]>(this.readPermisosFromToken());
+  readonly permisos = this._permisos.asReadonly();
+  private readonly permisosSet = computed(() => new Set(this._permisos()));
+
+  /** true si el usuario tiene TODOS los permisos indicados */
+  can(required: string | string[]): boolean {
+    const list = Array.isArray(required) ? required : [required];
+    const mine = this.permisosSet();
+    return list.every((p) => mine.has(p));
+  }
+
+  /** true si el usuario tiene AL MENOS UNO */
+  canAny(required: string[]): boolean {
+    const mine = this.permisosSet();
+    return required.some((p) => mine.has(p));
+  }
+
+  private readPermisosFromToken(): string[] {
+    if (!this.isSessionActive()) return [];
+    try {
+      return jwtDecode<JwtPayload>(this.getToken()!).permisos ?? [];
+    } catch {
+      return [];
+    }
+  }
+
+  //  permisos(): string[] {
+  //  const token = this.getToken();
+  //  if (!token) return [];
+  //
+  //  try {
+  //    return jwtDecode<JwtPayload>(token).permisos;
+  //  } catch {
+  //    return [];
+  //  }
+  //}
+  //
+  //  hasPermission(permiso: string): boolean {
+  //    return this.permisos().includes(permiso);
+  //  }
+  //
+  //  hasAnyPermission(permisos: string[]): boolean {
+  //    const mios = this.permisos();
+  //    return permisos.some((p) => mios.includes(p));
+  //  }
 }

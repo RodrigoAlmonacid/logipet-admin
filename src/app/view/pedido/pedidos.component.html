@@ -1,0 +1,186 @@
+<p-toast />
+<p-confirmdialog />
+
+<div class="flex align-items-center justify-content-between mb-4">
+  <h2 class="m-0">Pedidos</h2>
+  @if (permisoPedido.canCreate()) {
+  <p-button label="Nuevo pedido" icon="pi pi-plus" (onClick)="openCreate()" />
+  }
+</div>
+
+<p-tabs [value]="vistaActiva() ?? undefined" (valueChange)="cambiarVista($event)" class="block mb-3">
+  <p-tablist>
+    @for (t of pestanas(); track t.vista) {
+    <p-tab [value]="t.vista">{{ t.label }}</p-tab>
+    }
+  </p-tablist>
+</p-tabs>
+
+<p-table [value]="pedidos()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id">
+  <ng-template #header>
+    <tr>
+      <th>#</th>
+      <th>Cliente</th>
+      <th>Vendedor</th>
+      <th>Estado</th>
+      <th>Importe</th>
+      <th class="text-right">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-pedido>
+    <tr>
+      <td>{{ pedido.id }}</td>
+      <td>{{ pedido.cliente.comercio }}</td>
+      <td>{{ pedido.empleado.nombre }} {{ pedido.empleado.apellido }}</td>
+      <td>
+        <p-tag [value]="estadoActual(pedido)" [severity]="severidad(estadoActual(pedido))" />
+        @if (motivoRechazo(pedido); as m) {
+        <small class="block text-color-secondary mt-1">{{ m }}</small>
+        }
+      </td>
+      <td>{{ pedido.importe | currency }}</td>
+      <td class="text-right">
+        @if (esBorrador(pedido) && esPropio(pedido)) {
+        <p-button icon="pi pi-file-pdf" severity="secondary" [text]="true" [rounded]="true"
+          pTooltip="Exportar presupuesto" (onClick)="exportar(pedido)" />
+        }
+        @if (puedeEditar(pedido) && permisoPedido.canUpdate() && esPropio(pedido)) {
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Editar" (onClick)="openEdit(pedido)" />
+        }
+        @if (puedeConfirmar(pedido) && permisoPedido.canConfirm() && esPropio(pedido)) {
+        <p-button icon="pi pi-check" severity="success" [text]="true" [rounded]="true" pTooltip="Confirmar"
+          (onClick)="confirmarPedido(pedido)" />
+        }
+        @if (puedeAprobar(pedido) && permisoPedido.canApprove()) {
+        <p-button icon="pi pi-thumbs-up" severity="success" [text]="true" [rounded]="true" pTooltip="Aprobar"
+          (onClick)="aprobarPedido(pedido)" />
+        }
+        @if (puedeRechazar(pedido) && permisoPedido.canReject()) {
+        <p-button icon="pi pi-thumbs-down" severity="danger" [text]="true" [rounded]="true" pTooltip="Rechazar"
+          (onClick)="rechazarPedido(pedido)" />
+        }
+        @if (puedeCancelarPedido(pedido)) {
+        <p-button icon="pi pi-times" severity="danger" [text]="true" [rounded]="true" pTooltip="Cancelar"
+          (onClick)="cancelarPedido(pedido)" />
+        }
+        @if (puedeReabrir(pedido) && permisoPedido.canUpdate() && esPropio(pedido)) {
+        <p-button icon="pi pi-replay" severity="secondary" [text]="true" [rounded]="true" pTooltip="Corregir y reenviar"
+          (onClick)="reabrirPedido(pedido)" />
+        }
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #emptymessage>
+    <tr>
+      <td colspan="6" class="text-center p-4">No hay pedidos en esta vista.</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog [header]="editing() ? 'Editar pedido #' + editing()!.id : 'Nuevo pedido'" [(visible)]="dialogVisible"
+  [modal]="true" [draggable]="false" [style]="{ width: '40rem', maxWidth: '95vw' }">
+  <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="clienteId" class="text-sm font-medium">Cliente</label>
+      <p-select inputId="clienteId" formControlName="clienteId" [options]="clientesActivos()" optionLabel="comercio"
+        optionValue="id" [filter]="true" filterBy="comercio,nombre,apellido" placeholder="Seleccionar cliente"
+        styleClass="w-full" />
+      @if (form.controls.clienteId.invalid && form.controls.clienteId.touched) {
+      <small class="text-red-500">Elegí un cliente.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Productos</label>
+
+      @for (item of items.controls; track $index) {
+      <div [formGroup]="item" class="flex flex-column gap-2 p-2 border-1 surface-border border-round">
+        <div class="flex justify-content-between align-items-start">
+          <p-select formControlName="articuloId" [options]="articulos()" optionLabel="nombre" optionValue="id"
+            [filter]="true" filterBy="nombre,codigo" placeholder="Producto" styleClass="w-full"
+            (onChange)="recalcular()" />
+          <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="quitarItem($index)" />
+        </div>
+
+        <div class="flex flex-column sm:flex-row gap-2">
+          <div class="flex flex-column gap-1 flex-1">
+            <label class="text-xs text-color-secondary">Cantidad</label>
+            <p-inputnumber formControlName="cantidad" [min]="1" [max]="stockDe($index) ?? undefined"
+              [showButtons]="true" styleClass="w-full" (onInput)="recalcular()" />
+          </div>
+          <div class="flex flex-column gap-1 flex-1">
+            <label class="text-xs text-color-secondary">Stock disponible</label>
+            <div class="p-2 surface-100 border-round font-semibold">{{ stockDe($index) ?? '—' }}</div>
+          </div>
+          <div class="flex flex-column gap-1 flex-1">
+            <label class="text-xs text-color-secondary">Descuento %</label>
+            <p-inputnumber formControlName="descuentoPorcentaje" [min]="0" [max]="100" suffix="%" styleClass="w-full"
+              (onInput)="recalcular()" />
+          </div>
+        </div>
+
+        @if (item.hasError('stockInsuficiente')) {
+        <small class="p-error">
+          La cantidad supera el stock disponible ({{ item.getError('stockInsuficiente').stock }}).
+        </small>
+        }
+
+        @if (lineaCalculada($index); as linea) {
+        <div class="flex justify-content-between text-sm text-color-secondary mt-1">
+          <span>Neto: {{ linea.importeNeto | currency }}</span>
+          <span>IVA: {{ linea.importeIva | currency }}</span>
+          <span class="font-semibold text-color">Final: {{ linea.importeFinal | currency }}</span>
+        </div>
+        }
+      </div>
+      }
+
+      <p-button label="Agregar producto" icon="pi pi-plus" [text]="true" (onClick)="agregarItem()" />
+    </div>
+
+    <div class="flex justify-content-end text-sm text-color-secondary">
+      Total estimado: {{ totalEstimado() | currency }}
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+      <p-button type="submit" label="Guardar" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog header="Cancelar pedido" [visible]="!!cancelando()" (visibleChange)="!$event && cancelando.set(null)"
+  [modal]="true" [draggable]="false" [style]="{ width: '28rem' }">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Motivo</label>
+      <p-select [formControl]="motivoCtrl" [options]="motivos" optionLabel="label" optionValue="value"
+        placeholder="Elegí un motivo" styleClass="w-full" appendTo="body" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Observación (opcional)</label>
+      <textarea pTextarea [formControl]="observacionCtrl" rows="3" class="w-full"></textarea>
+    </div>
+    <small class="text-color-secondary">
+      Arrepentimiento devuelve el stock. Producto dañado no lo devuelve.
+    </small>
+    <div class="flex justify-content-end gap-2">
+      <p-button label="Volver" severity="secondary" [text]="true" (onClick)="cancelando.set(null)" />
+      <p-button label="Cancelar pedido" severity="danger" (onClick)="confirmarCancelacion()" />
+    </div>
+  </div>
+</p-dialog>
+
+<p-dialog header="Rechazar pedido" [visible]="!!rechazando()" (visibleChange)="!$event && rechazando.set(null)"
+  [modal]="true" [draggable]="false" [style]="{ width: '28rem' }">
+  <div class="flex flex-column gap-3">
+    <label class="text-sm font-medium">Motivo del rechazo</label>
+    <textarea pTextarea [formControl]="rechazoCtrl" rows="3" class="w-full"></textarea>
+    <div class="flex justify-content-end gap-2">
+      <p-button label="Volver" severity="secondary" [text]="true" (onClick)="rechazando.set(null)" />
+      <p-button label="Rechazar" severity="danger" (onClick)="confirmarRechazo()" />
+    </div>
+  </div>
+</p-dialog>

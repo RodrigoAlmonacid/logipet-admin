@@ -3,7 +3,9 @@
 
 <div class="flex align-items-center justify-content-between mb-4">
   <h2 class="m-0">Clientes</h2>
+  @if(permisoCliente.canCreate()){
   <p-button label="Nuevo cliente" icon="pi pi-plus" (onClick)="openCreate()" />
+  }
 </div>
 
 <p-table [value]="clientes()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
@@ -17,7 +19,9 @@
       <th>Telefono</th>
       <th>Dirección</th>
       <th>Estado</th>
-      <th class="text-right">Acciones</th>
+      @if(permisoCliente.hasRowActions()){
+        <th class="text-right">Acciones</th>
+      }
     </tr>
   </ng-template>
 
@@ -33,11 +37,13 @@
       <td>
         <p-tag [value]="clientes.activo ? 'Activo' : 'Inactivo'" [severity]="clientes.activo ? 'success' : 'danger'" />
       </td>
+      @if(permisoCliente.hasRowActions()){
       <td class="text-right">
-        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(clientes)" />
-        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-          [disabled]="!clientes.activo || clientes.id === currentUserId" (onClick)="confirmRemove(clientes)" />
+        @if(permisoCliente.canUpdate()){<p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(clientes)" />}
+        @if(permisoCliente.canDelete()){<p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+          [disabled]="!clientes.activo || clientes.id === currentUserId" (onClick)="confirmRemove(clientes)" /> }
       </td>
+    }
     </tr>
   </ng-template>
 

@@ -3,7 +3,9 @@
 
 <div class="flex align-items-center justify-content-between mb-4">
   <h2 class="m-0">Artículos</h2>
+  @if (permisoArticulo.canCreate()){
   <p-button label="Nuevo artículo" icon="pi pi-plus" (onClick)="openCreate()" />
+  }
 </div>
 
 <p-table [value]="articulos()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
@@ -17,7 +19,9 @@
       <th>Precio</th>
       <th>IVA (alicuota)</th>
       <th>Stock</th>
+      @if (permisoArticulo.hasRowActions()){
       <th class="text-right">Acciones</th>
+      }
     </tr>
   </ng-template>
 
@@ -31,11 +35,14 @@
       <td>{{ articulo.precio | currency }}</td>
       <td>{{ articulo.alicuotaIva?.porcentaje ?? '—' }} % ({{ articulo.alicuotaIva?.descripcion ?? '—' }})</td>
       <td>{{ articulo.stock }}</td>
+      @if (permisoArticulo.hasRowActions()){
       <td class="text-right">
-        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(articulo)" />
-        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-          (onClick)="confirmRemove(articulo)" />
+        @if (permisoArticulo.canUpdate()){<p-button icon="pi pi-pencil" [text]="true" [rounded]="true"
+          (onClick)="openEdit(articulo)" />}
+        @if (permisoArticulo.canDelete()){<p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+          (onClick)="confirmRemove(articulo)" />}
       </td>
+      }
     </tr>
   </ng-template>
 
@@ -68,9 +75,15 @@
     <div class="flex flex-column gap-2">
       <label for="marcaId" class="text-sm font-medium">Marca</label>
       <div class="flex gap-2">
+        @if (permisoMarca.canView()){
         <p-select inputId="marcaId" formControlName="marcaId" [options]="marcas()" optionLabel="nombre" optionValue="id"
-          [filter]="true" filterBy="nombre" placeholder="Sin marca" [showClear]="true" styleClass="w-full" />
-        <p-button icon="pi pi-plus" [text]="true" (onClick)="abrirNuevaMarca()" pTooltip="Crear marca nueva" />
+          [filter]="true" filterBy="nombre" placeholder="Sin marca" [showClear]="true" styleClass="w-full"
+          [appendTo]="'body'" />
+        @if(permisoMarca.canCreate()){
+        <p-button icon="pi pi-plus" [text]="true" (onClick)="abrirNuevaMarca()" pTooltip="Crear marca nueva" /> }
+        } @else {
+        <small>No tiene permiso para ver Marcas, comuníquese con un administrador.</small>
+        }
       </div>
     </div>
 
@@ -103,8 +116,9 @@
     <div class="flex flex-column gap-2">
       <label for="alicuotaIvaId" class="text-sm font-medium">IVA</label>
       <div class="flex gap-2">
-        <p-select inputId="alicuotaIvaId" formControlName="alicuotaIvaId" [options]="alicuotasIva()" optionLabel="descripcion" optionValue="id"
-          [filter]="true" filterBy="descripcion" placeholder="Sin IVA" [showClear]="true" styleClass="w-full" />
+        <p-select inputId="alicuotaIvaId" formControlName="alicuotaIvaId" [options]="alicuotasIva()"
+          optionLabel="descripcion" optionValue="id" [filter]="true" filterBy="descripcion" placeholder="Sin IVA"
+          [showClear]="true" styleClass="w-full" />
       </div>
     </div>
 

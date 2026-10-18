@@ -16,6 +16,7 @@ import { Observable } from 'rxjs';
 import { Articulo, ArticuloService } from '../../services/articulo.service';
 import { Marca, MarcaService } from '../../services/marca.service';
 import { AlicuotaIvaService, AlicuotaIva } from '../../services/alicuotaIva.service';
+import { permissionsFor } from '../../helpers/permission-for';
 
 @Component({
   selector: 'app-articulos',
@@ -48,6 +49,9 @@ export class ArticulosComponent implements OnInit {
   protected readonly marcaDialogVisible = signal(false);
   protected readonly savingMarca = signal(false);
   protected nuevaMarcaNombre = '';
+  protected readonly permisoMarca = permissionsFor('marca');
+  protected readonly permisoArticulo = permissionsFor('articulo');
+
 
   protected readonly form = this.fb.nonNullable.group({
     codigo: ['', Validators.required],
@@ -62,10 +66,14 @@ export class ArticulosComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.marcaService.list().subscribe({
-      next: (data) => this.marcas.set(data),
-      error: (err) => this.showError(err),
-    });
+
+    if (this.permisoMarca.canView()) {
+      this.marcaService.list().subscribe({
+        next: (data) => this.marcas.set(data),
+        error: (err) => this.showError(err),
+      });
+    }
+
     this.alicuotaIvaService.list().subscribe({
       next: (data) => this.alicuotasIva.set(data),
       error: (err) => this.showError(err),
@@ -87,6 +95,7 @@ export class ArticulosComponent implements OnInit {
   }
 
   protected openCreate(): void {
+    if (!this.permisoArticulo.canCreate()) return;
     this.editing.set(null);
     this.form.reset({
       codigo: '', nombre: '', presentacion: '', descripcion: '',
@@ -96,6 +105,7 @@ export class ArticulosComponent implements OnInit {
   }
 
   protected openEdit(art: Articulo): void {
+    if (!this.permisoArticulo.canUpdate()) return;
     this.editing.set(art);
     this.form.reset({
       codigo: art.codigo,
@@ -111,6 +121,12 @@ export class ArticulosComponent implements OnInit {
   }
 
   protected save(): void {
+
+    const allowed = this.editing()
+      ? this.permisoArticulo.canUpdate()
+      : this.permisoArticulo.canCreate();
+    if (!allowed) return;
+    
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -148,11 +164,13 @@ export class ArticulosComponent implements OnInit {
   // --- Alta rápida de marca, sin salir del formulario de artículo ---
 
   protected abrirNuevaMarca(): void {
+    if (!this.permisoMarca.canCreate()) return;
     this.nuevaMarcaNombre = '';
     this.marcaDialogVisible.set(true);
   }
 
   protected guardarNuevaMarca(): void {
+    if (!this.permisoMarca.canCreate()) return;
     const nombre = this.nuevaMarcaNombre.trim();
     if (!nombre) {
       return;
@@ -175,6 +193,7 @@ export class ArticulosComponent implements OnInit {
   }
 
   protected confirmRemove(art: Articulo): void {
+    if (!this.permisoArticulo.canDelete()) return;
     this.confirmation.confirm({
       header: 'Dar de baja',
       message: `¿Dar de baja "${art.nombre}" (${art.codigo})?`,

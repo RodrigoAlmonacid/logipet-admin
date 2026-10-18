@@ -15,6 +15,7 @@ import { AuthService } from '../../services/auth.service';
 import { DireccionSeleccionada, MapaDireccionComponent } from '../../shared/components/mapa/mapa-direccion.component';
 import { CONDICIONES_IVA, Cliente, ClienteService, CondicionIva } from '../../services/cliente.service';
 import { SelectModule } from 'primeng/select';
+import { permissionsFor } from '../../helpers/permission-for';
 
 @Component({
   selector: 'app-clientes',
@@ -40,6 +41,8 @@ export class ClientesComponent implements OnInit {
   protected readonly dialogVisible = signal(false);
   protected readonly editing = signal<Cliente | null>(null);
   protected readonly currentUserId = this.auth.currentUser()?.id;
+
+  protected readonly permisoCliente = permissionsFor('cliente');
 
   protected readonly form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],
@@ -94,12 +97,14 @@ export class ClientesComponent implements OnInit {
   }
 
   protected openCreate(): void {
+    if (!this.permisoCliente.canCreate()) return;
     this.editing.set(null);
     this.form.reset({ nombre: '', apellido: '', email: '', comercio: '', telefono: '', cuit: '', horaAbreMat: '', horaCierreMat: '', horaAbreVesp: '', horaCierreVesp: '', direccion: '', latitud: 0, longitud: 0, activo: true });
     this.dialogVisible.set(true);
   }
 
   protected openEdit(cliente: Cliente): void {
+    if (!this.permisoCliente.canUpdate()) return;
     this.editing.set(cliente);
     this.form.reset({
       nombre: cliente.nombre,
@@ -121,6 +126,12 @@ export class ClientesComponent implements OnInit {
   }
 
   protected save(): void {
+
+    const allowed = this.editing()
+      ? this.permisoCliente.canUpdate()
+      : this.permisoCliente.canCreate();
+    if (!allowed) return;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -162,6 +173,7 @@ export class ClientesComponent implements OnInit {
   }
 
   protected confirmRemove(cli: Cliente): void {
+    if (!this.permisoCliente.canDelete()) return;
     this.confirmation.confirm({
       header: 'Dar de baja',
       message: `¿Dar de baja a ${cli.nombre} ${cli.apellido}? No podrá comprar hasta que lo reactives.`,
