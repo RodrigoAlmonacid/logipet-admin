@@ -99,7 +99,21 @@ export class ClientesComponent implements OnInit {
   protected openCreate(): void {
     if (!this.permisoCliente.canCreate()) return;
     this.editing.set(null);
-    this.form.reset({ nombre: '', apellido: '', email: '', comercio: '', telefono: '', cuit: '', horaAbreMat: '', horaCierreMat: '', horaAbreVesp: '', horaCierreVesp: '', direccion: '', latitud: 0, longitud: 0, activo: true });
+    this.form.reset({ 
+      nombre: '', 
+      apellido: '', 
+      email: '', 
+      comercio: '', 
+      telefono: '', 
+      cuit: '', 
+      horaAbreMat: '', 
+      horaCierreMat: '', 
+      horaAbreVesp: '', 
+      horaCierreVesp: '', 
+      direccion: '', 
+      latitud: 0, 
+      longitud: 0, 
+      activo: true });
     this.dialogVisible.set(true);
   }
 
@@ -117,6 +131,7 @@ export class ClientesComponent implements OnInit {
       horaCierreMat: cliente.horaCierreMat,
       horaAbreVesp: cliente.horaAbreVesp,
       horaCierreVesp: cliente.horaCierreVesp,
+      condicionIva: cliente.condicionIva ?? 'CONSUMIDOR_FINAL' as CondicionIva,
       direccion: cliente.direccion,
       latitud: cliente.latitud,
       longitud: cliente.longitud,
@@ -137,14 +152,21 @@ export class ClientesComponent implements OnInit {
       return;
     }
 
-    const { nombre, apellido, email, comercio, telefono, cuit, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud } = this.form.getRawValue();
+    const {
+      nombre, apellido, email, comercio, telefono, cuit, condicionIva,
+      horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp,
+      direccion, latitud, longitud, activo,
+    } = this.form.getRawValue();
     const current = this.editing();
     this.saving.set(true);
 
     if (current) {
       this.clienteService
-        .update(current.id, { nombre, apellido, email, comercio, telefono, cuit, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud })
-        .subscribe({
+        .update(current.id, {
+          nombre, apellido, email, comercio, telefono, cuit, condicionIva, activo,
+          horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp,
+          direccion, latitud, longitud,
+        }).subscribe({
           next: () => {
             this.afterSave();
             this.messages.add({ severity: 'success', summary: 'Cliente actualizado' });
@@ -155,20 +177,25 @@ export class ClientesComponent implements OnInit {
           },
         });
     } else {
-      this.clienteService.create({ nombre, apellido, email, comercio, telefono, cuit, condicionIva: CONDICIONES_IVA[0].value, horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp, direccion, latitud, longitud }).subscribe({
-        next: (res) => {
-          this.afterSave();
-          this.messages.add({
-            severity: 'success',
-            summary: 'Cliente creado',
-            sticky: true,
-          });
-        },
-        error: (err) => {
-          this.saving.set(false);
-          this.showError(err);
-        },
-      });
+      this.clienteService
+        .create({
+          nombre, apellido, email, comercio, telefono, cuit, condicionIva,
+          horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp,
+          direccion, latitud, longitud,
+        }).subscribe({
+          next: (res) => {
+            this.afterSave();
+            this.messages.add({
+              severity: 'success',
+              summary: 'Cliente creado',
+              sticky: true,
+            });
+          },
+          error: (err) => {
+            this.saving.set(false);
+            this.showError(err);
+          },
+        });
     }
   }
 
