@@ -25,6 +25,7 @@ export interface Articulo {
   marca: Marca | null;
   alicuotaIvaId: number | null;
   alicuotaIva: AlicuotaIva | null;
+  pesoGramos: number | null
 }
 
 export interface CreateArticulo {

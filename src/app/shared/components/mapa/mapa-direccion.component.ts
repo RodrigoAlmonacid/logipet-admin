@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import * as L from 'leaflet';
+import { environment } from '../../../../environments/environment';
 
 export interface DireccionSeleccionada {
     direccion: string;
@@ -43,13 +44,32 @@ export class MapaDireccionComponent {
     private lat = 0;
     private lon = 0;
 
+    private customIcon = L.icon({
+        iconUrl: 'favicon.png',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowUrl: ''
+    });
+
     constructor(private readonly http: HttpClient) { }
 
-    abrir(): void {
+    abrir(datosPrevios?: DireccionSeleccionada): void {
         this.visible.set(true);
         this.resultados.set([]);
-        this.direccionElegida.set(null);
-        this.busqueda = '';
+        this.marker = undefined; // Resetear el marcador previo
+
+        if (datosPrevios?.latitud && datosPrevios?.longitud) {
+            this.direccionElegida.set(datosPrevios.direccion);
+            this.busqueda = datosPrevios.direccion;
+            this.lat = datosPrevios.latitud;
+            this.lon = datosPrevios.longitud;
+        } else {
+            this.direccionElegida.set(null);
+            this.busqueda = '';
+            this.lat = 0;
+            this.lon = 0;
+        }
     }
 
     protected onDialogShown(): void {
@@ -57,22 +77,29 @@ export class MapaDireccionComponent {
     }
 
     private initMap(): void {
-        if (this.map) {
-            this.map.remove();
-        }
+        if (this.map) this.map.remove();
 
-        // Centro por defecto: Neuquén capital
-        this.map = L.map(this.mapContainer.nativeElement).setView([-38.9516, -68.0591], 13);
+        const startLat = this.lat !== 0 ? this.lat : -38.9516;
+        const startLon = this.lon !== 0 ? this.lon : -68.0591;
+        const startZoom = this.lat !== 0 ? 16 : 13;
+
+        this.map = L.map(this.mapContainer.nativeElement).setView([startLat, startLon], startZoom);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            attribution: '&copy; OpenStreetMap',
             maxZoom: 19,
         }).addTo(this.map);
 
         this.map.on('click', (e: L.LeafletMouseEvent) => {
             this.colocarPin(e.latlng.lat, e.latlng.lng);
+            this.buscarDireccionInversa(e.latlng.lat, e.latlng.lng);
         });
-        setTimeout(() => this.map?.invalidateSize(), 100);
+
+        if (this.lat !== 0 && this.lon !== 0) {
+            this.colocarPin(this.lat, this.lon);
+        }
+
+        setTimeout(() => this.map?.invalidateSize(), 250);
     }
 
     protected buscar(): void {
@@ -80,28 +107,27 @@ export class MapaDireccionComponent {
             return;
         }
         this.buscando.set(true);
+        console.log('FRONT Pide a backend:', `${environment.apiUrl}/geocodificacion/buscar?q=${this.busqueda}`);  // mensajes para mostrar salidas en Framework e interoperabilidad
 
-        const url = 'https://nominatim.openstreetmap.org/search';
-        const params = {
-            format: 'json',
-            q: this.busqueda,
-            countrycodes: 'ar',
-            limit: '5',
-        };
-
-        this.http.get<ResultadoNominatim[]>(url, { params }).subscribe({
-            next: (res) => {
-                this.resultados.set(res);
-                this.buscando.set(false);
-            },
-            error: () => this.buscando.set(false),
-        });
+        this.http
+            .get<ResultadoNominatim[]>(`${environment.apiUrl}/geocodificacion/buscar`, {
+                params: { q: this.busqueda },
+            })
+            .subscribe({
+                next: (res) => {
+                    console.log('FRONT Recibe de backend (Buscar):', res);  // mensajes para mostrar salidas en Framework e interoperabilidad
+                    this.resultados.set(res);
+                    this.buscando.set(false);
+                },
+                error: () => this.buscando.set(false),
+            });
     }
 
     protected elegirResultado(r: ResultadoNominatim): void {
         const lat = parseFloat(r.lat);
         const lon = parseFloat(r.lon);
         this.direccionElegida.set(r.display_name);
+        this.busqueda = r.display_name; // Sincroniza el input
         this.colocarPin(lat, lon);
         this.map?.setView([lat, lon], 16);
     }
@@ -113,19 +139,34 @@ export class MapaDireccionComponent {
         if (this.marker) {
             this.marker.setLatLng([lat, lon]);
         } else {
-            this.marker = L.marker([lat, lon], { draggable: true }).addTo(this.map!);
+            this.marker = L.marker([lat, lon], { draggable: true, icon: this.customIcon }).addTo(this.map!);
+
             this.marker.on('dragend', () => {
                 const pos = this.marker!.getLatLng();
                 this.lat = pos.lat;
                 this.lon = pos.lng;
+                this.buscarDireccionInversa(pos.lat, pos.lng); // Actualiza el nombre al soltar el pin
             });
         }
     }
 
+    private buscarDireccionInversa(lat: number, lon: number): void {
+        console.log('FRONT Pide a backend:', `${environment.apiUrl}/geocodificacion/inversa?lat=${lat}&lon=${lon}`);  // mensajes para mostrar salidas en Framework e interoperabilidad
+        this.http
+            .get<ResultadoNominatim>(`${environment.apiUrl}/geocodificacion/inversa`, {
+                params: { lat: lat.toString(), lon: lon.toString() },
+            })
+            .subscribe({
+                next: (res) => {
+                    console.log('FRONT Recibe de backend (Inversa):', res);  // mensajes para mostrar salidas en Framework e interoperabilidad
+                    this.direccionElegida.set(res.display_name);
+                    this.busqueda = res.display_name; // Actualiza el input visualmente
+                }
+            });
+    }
+
     protected confirmar(): void {
-        if (!this.marker) {
-            return; // todavía no se eligió ni se clickeó ningún punto
-        }
+        if (!this.marker) return;
         this.confirmado.emit({
             direccion: this.direccionElegida() ?? this.busqueda,
             latitud: this.lat,

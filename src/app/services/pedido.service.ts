@@ -3,10 +3,17 @@ import { Injectable, inject } from '@angular/core';
 import { environment } from './../../environments/environment';
 import { Articulo } from './articulo.service';
 import { Cliente } from './cliente.service';
+import { Comercio } from './comercio.service';
 
 export interface Estado {
   id: number;
   nombre: string;
+}
+
+export interface EmpleadoResumen {
+  id: number;
+  nombre: string;
+  apellido: string;
 }
 
 export interface DetallePedido {
@@ -16,19 +23,23 @@ export interface DetallePedido {
   descuentoPorcentaje: number;
   articulo: Articulo;
   alicuotaIvaPorcentaje: number;
+  pesoGramos: number | null;
 }
 
 export interface Pedido {
   id: number;
   importe: number;
   createdAt: string;
-  cliente: Cliente;
-  empleado: { id: number; nombre: string; apellido: string };
+  cliente: Omit<Cliente, 'comercios'>;
+  comercio: Comercio; 
+  empleado: EmpleadoResumen;
   articulos: DetallePedido[];
   historialEstados: EstadoPedido[];
   stockDescontado: boolean;
   lineas: LineaCalculada[];
   totales: Totales;
+  pesoGramos: number;
+pesoIncompleto: boolean;
 }
 
 export interface LineaCalculada {
@@ -43,6 +54,7 @@ export interface LineaCalculada {
   importeNeto: number;
   importeIva: number;
   importeFinal: number;
+  pesoGramos: number | null;
 }
 
 export interface Totales {
@@ -59,6 +71,7 @@ export interface ItemPedido {
 
 export interface CreatePedido {
   clienteId: number;
+  comercioId: number;
   items: ItemPedido[];
 }
 
@@ -75,6 +88,7 @@ export interface EstadoPedido {
   fechaFin: string | null;
   motivo?: MotivoBaja | null;
   observacion?: string | null;
+  auditor: EmpleadoResumen;
 }
 
 export type UpdatePedido = CreatePedido;
@@ -124,6 +138,12 @@ export function cancelaRequiereMotivo(p: Pedido): boolean {
 
 export function esBorrador(p: Pedido): boolean {
   return estadoActual(p) === 'borrador';
+}
+
+export function formatoPeso(gramos: number): string {
+  return gramos >= 1000
+    ? `${(gramos / 1000).toLocaleString('es-AR', { maximumFractionDigits: 2 })} kg`
+    : `${gramos} g`;
 }
 
 @Injectable({ providedIn: 'root' })

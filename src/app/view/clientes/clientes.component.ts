@@ -7,21 +7,26 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { MultiSelectModule } from 'primeng/multiselect';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { AuthService } from '../../services/auth.service';
-import { DireccionSeleccionada, MapaDireccionComponent } from '../../shared/components/mapa/mapa-direccion.component';
-import { CONDICIONES_IVA, Cliente, ClienteService, CondicionIva } from '../../services/cliente.service';
-import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize } from 'rxjs';
 import { permissionsFor } from '../../helpers/permission-for';
+import { CONDICIONES_IVA, Cliente, ClienteService, CondicionIva } from '../../services/cliente.service';
+import { Comercio, ComercioService } from '../../services/comercio.service';
+import {
+  ComercioCamposComponent, comercioDatos, crearComercioGroup,
+} from '../../shared/components/comercio-campos/comercio-campos.component';
+import { ComercioDialogComponent } from '../../shared/components/comercio-campos/comercio-dialog.component';
 
 @Component({
   selector: 'app-clientes',
   imports: [
     ReactiveFormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule,
-    MultiSelectModule, CheckboxModule, TagModule, ToastModule, ConfirmDialogModule, MapaDireccionComponent,
+    CheckboxModule, TagModule, ToastModule, ConfirmDialogModule, TooltipModule,
+    ComercioCamposComponent, ComercioDialogComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './clientes.component.html',
@@ -30,7 +35,7 @@ import { permissionsFor } from '../../helpers/permission-for';
 export class ClientesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly clienteService = inject(ClienteService);
-  private readonly auth = inject(AuthService);
+  private readonly comercioService = inject(ComercioService);
   private readonly messages = inject(MessageService);
   private readonly confirmation = inject(ConfirmationService);
   protected readonly condicionesIva = CONDICIONES_IVA;
@@ -40,46 +45,36 @@ export class ClientesComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly dialogVisible = signal(false);
   protected readonly editing = signal<Cliente | null>(null);
-  protected readonly currentUserId = this.auth.currentUser()?.id;
 
   protected readonly permisoCliente = permissionsFor('cliente');
+  protected readonly permisoComercio = permissionsFor('comercio');
 
+  // datos fiscales del cliente
   protected readonly form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],
     apellido: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    comercio: ['', Validators.required],
     cuit: ['', Validators.required],
     condicionIva: ['CONSUMIDOR_FINAL' as CondicionIva, Validators.required],
     telefono: ['', Validators.required],
-    horaAbreMat: ['', Validators.required],
-    horaCierreMat: ['', Validators.required],
-    horaAbreVesp: ['', Validators.required],
-    horaCierreVesp: ['', Validators.required],
-    direccion: ['', Validators.required],
-    latitud: [0, Validators.required],
-    longitud: [0, Validators.required],
     activo: [true],
   });
 
-  protected onDireccionConfirmada(d: DireccionSeleccionada): void {
-    this.form.patchValue({
-      direccion: d.direccion,
-      latitud: d.latitud,
-      longitud: d.longitud,
-    });
+  // primer comercio: solo se usa en el alta
+  protected readonly comercioInicial = crearComercioGroup(this.fb);
+
+  // gestión de comercios de un cliente
+  protected readonly clienteComercios = signal<Cliente | null>(null);
+  protected readonly comercios = signal<Comercio[]>([]);
+  protected readonly comercioDialog = signal(false);
+  protected readonly comercioEditando = signal<Comercio | null>(null);
+
+  ngOnInit(): void {
+    this.load();
   }
 
   protected etiquetaCondicionIva(valor: CondicionIva): string {
     return this.condicionesIva.find((c) => c.value === valor)?.label ?? valor;
-  }
-
-  ngOnInit(): void {
-    this.load();
-    this.clienteService.list().subscribe({
-      next: (clientes) => this.clientes.set(clientes),
-      error: (err) => this.showError(err),
-    });
   }
 
   protected load(): void {
@@ -99,21 +94,8 @@ export class ClientesComponent implements OnInit {
   protected openCreate(): void {
     if (!this.permisoCliente.canCreate()) return;
     this.editing.set(null);
-    this.form.reset({ 
-      nombre: '', 
-      apellido: '', 
-      email: '', 
-      comercio: '', 
-      telefono: '', 
-      cuit: '', 
-      horaAbreMat: '', 
-      horaCierreMat: '', 
-      horaAbreVesp: '', 
-      horaCierreVesp: '', 
-      direccion: '', 
-      latitud: 0, 
-      longitud: 0, 
-      activo: true });
+    this.form.reset();           // vuelve a los valores iniciales (CONSUMIDOR_FINAL, activo)
+    this.comercioInicial.reset();
     this.dialogVisible.set(true);
   }
 
@@ -124,79 +106,46 @@ export class ClientesComponent implements OnInit {
       nombre: cliente.nombre,
       apellido: cliente.apellido,
       email: cliente.email,
-      comercio: cliente.comercio,
       cuit: cliente.cuit,
+      condicionIva: cliente.condicionIva ?? 'CONSUMIDOR_FINAL',
       telefono: cliente.telefono,
-      horaAbreMat: cliente.horaAbreMat,
-      horaCierreMat: cliente.horaCierreMat,
-      horaAbreVesp: cliente.horaAbreVesp,
-      horaCierreVesp: cliente.horaCierreVesp,
-      condicionIva: cliente.condicionIva ?? 'CONSUMIDOR_FINAL' as CondicionIva,
-      direccion: cliente.direccion,
-      latitud: cliente.latitud,
-      longitud: cliente.longitud,
       activo: cliente.activo,
     });
     this.dialogVisible.set(true);
   }
 
   protected save(): void {
+    const current = this.editing();
+    if (!(current ? this.permisoCliente.canUpdate() : this.permisoCliente.canCreate())) return;
 
-    const allowed = this.editing()
-      ? this.permisoCliente.canUpdate()
-      : this.permisoCliente.canCreate();
-    if (!allowed) return;
-
-    if (this.form.invalid) {
+    if (this.form.invalid || (!current && this.comercioInicial.invalid)) {
       this.form.markAllAsTouched();
+      this.comercioInicial.markAllAsTouched();
       return;
     }
 
-    const {
-      nombre, apellido, email, comercio, telefono, cuit, condicionIva,
-      horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp,
-      direccion, latitud, longitud, activo,
-    } = this.form.getRawValue();
-    const current = this.editing();
+    const { nombre, apellido, email, cuit, condicionIva, telefono, activo } = this.form.getRawValue();
     this.saving.set(true);
 
-    if (current) {
-      this.clienteService
-        .update(current.id, {
-          nombre, apellido, email, comercio, telefono, cuit, condicionIva, activo,
-          horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp,
-          direccion, latitud, longitud,
-        }).subscribe({
-          next: () => {
-            this.afterSave();
-            this.messages.add({ severity: 'success', summary: 'Cliente actualizado' });
-          },
-          error: (err) => {
-            this.saving.set(false);
-            this.showError(err);
-          },
+    const req$ = current
+      ? this.clienteService.update(current.id, { nombre, apellido, email, cuit, condicionIva, telefono, activo })
+      : this.clienteService.create({
+          nombre, apellido, email, cuit, condicionIva, telefono,
+          comercio: comercioDatos(this.comercioInicial),
         });
-    } else {
-      this.clienteService
-        .create({
-          nombre, apellido, email, comercio, telefono, cuit, condicionIva,
-          horaAbreMat, horaCierreMat, horaAbreVesp, horaCierreVesp,
-          direccion, latitud, longitud,
-        }).subscribe({
-          next: (res) => {
-            this.afterSave();
-            this.messages.add({
-              severity: 'success',
-              summary: 'Cliente creado',
-              sticky: true,
-            });
-          },
-          error: (err) => {
-            this.saving.set(false);
-            this.showError(err);
-          },
+
+    req$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.dialogVisible.set(false);
+        this.load();
+        this.messages.add({
+          severity: 'success',
+          summary: current ? 'Cliente actualizado' : 'Cliente creado',
+          detail: current ? undefined : 'Se crea inactivo: editalo para activarlo.',
         });
-    }
+      },
+      error: (err) => this.showError(err),
+    });
   }
 
   protected confirmRemove(cli: Cliente): void {
@@ -219,10 +168,60 @@ export class ClientesComponent implements OnInit {
     });
   }
 
-  private afterSave(): void {
-    this.saving.set(false);
-    this.dialogVisible.set(false);
-    this.load();
+  // ---------- comercios del cliente ----------
+  protected verComercios(cli: Cliente): void {
+    this.clienteComercios.set(cli);
+    this.comercios.set([]);
+    this.recargarComercios();
+  }
+
+  protected nuevoComercio(): void {
+    this.comercioEditando.set(null);
+    this.comercioDialog.set(true);
+  }
+
+  protected editarComercio(c: Comercio): void {
+    this.comercioEditando.set(c);
+    this.comercioDialog.set(true);
+  }
+
+  protected recargarComercios(): void {
+    const cli = this.clienteComercios();
+    if (!cli) return;
+    this.comercioService.list(cli.id).subscribe({
+      next: (data) => this.comercios.set(data),
+      error: (err) => this.showError(err),
+    });
+    this.load(); // actualiza el conteo de la tabla de clientes
+  }
+
+  protected bajaComercio(c: Comercio): void {
+    this.confirmation.confirm({
+      header: 'Dar de baja el comercio',
+      message: `¿Dar de baja "${c.nombre}"? No podrá usarse en pedidos nuevos.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Dar de baja',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () =>
+        this.comercioService.remove(c.id).subscribe({
+          next: () => {
+            this.messages.add({ severity: 'success', summary: 'Comercio dado de baja' });
+            this.recargarComercios();
+          },
+          error: (err) => this.showError(err),
+        }),
+    });
+  }
+
+  protected reactivarComercio(c: Comercio): void {
+    this.comercioService.update(c.id, { activo: true }).subscribe({
+      next: () => {
+        this.messages.add({ severity: 'success', summary: 'Comercio reactivado' });
+        this.recargarComercios();
+      },
+      error: (err) => this.showError(err),
+    });
   }
 
   private showError(err: HttpErrorResponse): void {

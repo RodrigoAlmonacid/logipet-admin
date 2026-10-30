@@ -1,0 +1,39 @@
+<div class="flex flex-column gap-3">
+  <div class="flex flex-column gap-2">
+    <label [for]="uid + '-nombre'" class="text-sm font-medium">Nombre del comercio</label>
+    <input pInputText [id]="uid + '-nombre'" [formControl]="group().controls.nombre" class="w-full" />
+    @if (group().controls.nombre.invalid && group().controls.nombre.touched) {
+    <small class="text-red-500">El nombre del comercio es obligatorio.</small>
+    }
+  </div>
+
+  <div class="flex flex-column gap-2">
+    <label [for]="uid + '-tel'" class="text-sm font-medium">Teléfono del local (opcional)</label>
+    <input pInputText [id]="uid + '-tel'" [formControl]="group().controls.telefono" class="w-full" />
+  </div>
+
+  <div class="grid">
+    @for (h of horarios; track h.key) {
+    <div class="col-6 flex flex-column gap-2">
+      <label [for]="uid + '-' + h.key" class="text-sm font-medium">{{ h.label }}</label>
+      <input pInputText type="time" [id]="uid + '-' + h.key" [formControl]="group().controls[h.key]" class="w-full" />
+      @if (group().controls[h.key].invalid && group().controls[h.key].touched) {
+      <small class="text-red-500">Obligatorio.</small>
+      }
+    </div>
+    }
+  </div>
+
+  <div class="flex flex-column gap-2">
+    <label class="text-sm font-medium">Dirección</label>
+    <div class="flex gap-2">
+      <input pInputText [formControl]="group().controls.direccion" readonly class="w-full" />
+      <p-button icon="pi pi-map-marker" ariaLabel="Elegir ubicación en el mapa" (onClick)="abrirMapa()" />
+    </div>
+    @if (group().controls.direccion.invalid && group().controls.direccion.touched) {
+    <small class="text-red-500">Elegí una ubicación en el mapa.</small>
+    }
+  </div>
+
+  <app-mapa-direccion (confirmado)="onDireccionConfirmada($event)" />
+</div>
