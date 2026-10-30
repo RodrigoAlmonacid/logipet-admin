@@ -3,7 +3,7 @@
 
 <div class="flex align-items-center justify-content-between mb-4">
   <h2 class="m-0">Clientes</h2>
-  @if(permisoCliente.canCreate()){
+  @if (permisoCliente.canCreate()) {
   <p-button label="Nuevo cliente" icon="pi pi-plus" (onClick)="openCreate()" />
   }
 </div>
@@ -11,52 +11,68 @@
 <p-table [value]="clientes()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
   <ng-template #header>
     <tr>
-      <th>Nombre</th>
+      <th>Cliente</th>
       <th>CUIT</th>
-      <th>Tipo IVA</th>
-      <th>Comercio</th>
+      <th>Condición IVA</th>
       <th>Email</th>
-      <th>Telefono</th>
-      <th>Dirección</th>
+      <th>Teléfono</th>
+      <th>Comercios</th>
       <th>Estado</th>
-      @if(permisoCliente.hasRowActions()){
-        <th class="text-right">Acciones</th>
+      @if (permisoCliente.hasRowActions() || permisoComercio.canView()) {
+      <th class="text-right">Acciones</th>
       }
     </tr>
   </ng-template>
 
-  <ng-template #body let-clientes>
+  <ng-template #body let-cli>
     <tr>
-      <td>{{ clientes.apellido }}, {{ clientes.nombre }}</td>
-      <td>{{ clientes.cuit }}</td>
-      <td>{{ etiquetaCondicionIva(clientes.condicionIva) }}</td>
-      <td>{{ clientes.comercio }}</td>
-      <td>{{ clientes.email }}</td>
-      <td>{{ clientes.telefono }}</td>
-      <td>{{ clientes.direccion }}</td>
+      <td>{{ cli.apellido }}, {{ cli.nombre }}</td>
+      <td>{{ cli.cuit }}</td>
+      <td>{{ etiquetaCondicionIva(cli.condicionIva) }}</td>
+      <td>{{ cli.email }}</td>
+      <td>{{ cli.telefono }}</td>
       <td>
-        <p-tag [value]="clientes.activo ? 'Activo' : 'Inactivo'" [severity]="clientes.activo ? 'success' : 'danger'" />
+        @if (cli.comercios.length) {
+        {{ cli.comercios[0].nombre }}
+        @if (cli.comercios.length > 1) {
+        <small class="text-color-secondary"> +{{ cli.comercios.length - 1 }}</small>
+        }
+        } @else {
+        <span class="text-color-secondary">Sin comercios</span>
+        }
       </td>
-      @if(permisoCliente.hasRowActions()){
+      <td>
+        <p-tag [value]="cli.activo ? 'Activo' : 'Inactivo'" [severity]="cli.activo ? 'success' : 'danger'" />
+      </td>
+      @if (permisoCliente.hasRowActions() || permisoComercio.canView()) {
       <td class="text-right">
-        @if(permisoCliente.canUpdate()){<p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(clientes)" />}
-        @if(permisoCliente.canDelete()){<p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-          [disabled]="!clientes.activo || clientes.id === currentUserId" (onClick)="confirmRemove(clientes)" /> }
+        @if (permisoComercio.canView()) {
+        <p-button icon="pi pi-map-marker" severity="secondary" [text]="true" [rounded]="true"
+          pTooltip="Comercios" (onClick)="verComercios(cli)" />
+        }
+        @if (permisoCliente.canUpdate()) {
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Editar" (onClick)="openEdit(cli)" />
+        }
+        @if (permisoCliente.canDelete()) {
+        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+          [disabled]="!cli.activo" pTooltip="Dar de baja" (onClick)="confirmRemove(cli)" />
+        }
       </td>
-    }
+      }
     </tr>
   </ng-template>
 
   <ng-template #emptymessage>
-    <tr>
-      <td colspan="6" class="text-center p-4">No hay clientes cargados.</td>
-    </tr>
+    <tr><td colspan="8" class="text-center p-4">No hay clientes cargados.</td></tr>
   </ng-template>
 </p-table>
 
+<!-- alta / edición: datos fiscales (+ primer comercio en el alta) -->
 <p-dialog [header]="editing() ? 'Editar cliente' : 'Nuevo cliente'" [(visible)]="dialogVisible" [modal]="true"
-  [draggable]="false" [style]="{ width: '32rem' }">
+  [draggable]="false" [style]="{ width: '36rem', maxWidth: '95vw' }">
   <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
+    <h4 class="m-0 text-color-secondary">Datos fiscales</h4>
+
     <div class="flex flex-column gap-2">
       <label for="nombre" class="text-sm font-medium">Nombre</label>
       <input pInputText id="nombre" formControlName="nombre" class="w-full" />
@@ -77,14 +93,14 @@
       <label for="cuit" class="text-sm font-medium">CUIT</label>
       <input pInputText id="cuit" formControlName="cuit" placeholder="20-12345678-9" class="w-full" />
       @if (form.controls.cuit.invalid && form.controls.cuit.touched) {
-      <small class="text-red-500">Formato inválido (XX-XXXXXXXX-X).</small>
+      <small class="text-red-500">El CUIT es obligatorio.</small>
       }
     </div>
 
     <div class="flex flex-column gap-2">
       <label for="condicionIva" class="text-sm font-medium">Condición frente al IVA</label>
       <p-select inputId="condicionIva" formControlName="condicionIva" [options]="condicionesIva" optionLabel="label"
-        optionValue="value" placeholder="Seleccionar" styleClass="w-full" />
+        optionValue="value" placeholder="Seleccionar" styleClass="w-full" appendTo="body" />
     </div>
 
     <div class="flex flex-column gap-2">
@@ -96,14 +112,6 @@
     </div>
 
     <div class="flex flex-column gap-2">
-      <label for="comercio" class="text-sm font-medium">Comercio</label>
-      <input pInputText id="comercio" formControlName="comercio" class="w-full" />
-      @if (form.controls.comercio.invalid && form.controls.comercio.touched) {
-      <small class="text-red-500">El comercio es obligatorio.</small>
-      }
-    </div>
-
-    <div class="flex flex-column gap-2">
       <label for="telefono" class="text-sm font-medium">Teléfono</label>
       <input pInputText id="telefono" formControlName="telefono" class="w-full" />
       @if (form.controls.telefono.invalid && form.controls.telefono.touched) {
@@ -111,51 +119,16 @@
       }
     </div>
 
-    <div class="flex gap-3">
-      <div class="flex flex-column gap-2 flex-1">
-        <label for="horaAbreMat" class="text-sm font-medium">Apertura mañana</label>
-        <input pInputText type="time" id="horaAbreMat" formControlName="horaAbreMat" class="w-full" />
-      </div>
-
-      <div class="flex flex-column gap-2 flex-1">
-        <label for="horaCierreMat" class="text-sm font-medium">Cierre mañana</label>
-        <input pInputText type="time" id="horaCierreMat" formControlName="horaCierreMat" class="w-full" />
-      </div>
-    </div>
-
-    <div class="flex gap-3">
-      <div class="flex flex-column gap-2 flex-1">
-        <label for="horaAbreVesp" class="text-sm font-medium">Apertura tarde</label>
-        <input pInputText type="time" id="horaAbreVesp" formControlName="horaAbreVesp" class="w-full" />
-      </div>
-
-      <div class="flex flex-column gap-2 flex-1">
-        <label for="horaCierreVesp" class="text-sm font-medium">Cierre tarde</label>
-        <input pInputText type="time" id="horaCierreVesp" formControlName="horaCierreVesp" class="w-full" />
-      </div>
-    </div>
-
-    <div class="flex flex-column gap-2">
-      <label class="text-sm font-medium">Dirección</label>
-      <div class="flex gap-2">
-        <input pInputText [value]="form.controls.direccion.value" readonly class="w-full" />
-        <p-button icon="pi pi-map-marker" (onClick)="mapa.abrir()" />
-      </div>
-      @if (form.controls.direccion.invalid && form.controls.direccion.touched) {
-      <small class="text-red-500">Elegí una ubicación en el mapa.</small>
-      }
-    </div>
-
-    <app-mapa-direccion #mapa (confirmado)="onDireccionConfirmada($event)" />
-
     @if (editing()) {
     <div class="flex align-items-center gap-2">
       <p-checkbox inputId="activo" formControlName="activo" [binary]="true" />
       <label for="activo" class="text-sm font-medium">Cliente activo</label>
     </div>
     } @else {
+    <h4 class="m-0 mt-2 text-color-secondary">Primer comercio</h4>
+    <app-comercio-campos [group]="comercioInicial" />
     <small class="text-color-secondary">
-      Se crea inactivo, después lo editás para activarlo.
+      Se crea inactivo: después lo editás para activarlo. Más puntos de entrega se agregan desde "Comercios".
     </small>
     }
 
@@ -165,3 +138,57 @@
     </div>
   </form>
 </p-dialog>
+
+<!-- comercios del cliente -->
+<p-dialog [header]="'Comercios de ' + (clienteComercios()?.apellido ?? '') + ', ' + (clienteComercios()?.nombre ?? '')"
+  [visible]="!!clienteComercios()" (visibleChange)="!$event && clienteComercios.set(null)" [modal]="true"
+  [draggable]="false" [style]="{ width: '60rem', maxWidth: '95vw' }">
+  <div class="flex flex-column gap-3">
+    @if (permisoComercio.canCreate()) {
+    <div class="flex justify-content-end">
+      <p-button label="Nuevo comercio" icon="pi pi-plus" (onClick)="nuevoComercio()" />
+    </div>
+    }
+
+    <p-table [value]="comercios()" styleClass="p-datatable-sm">
+      <ng-template #header>
+        <tr>
+          <th>Comercio</th>
+          <th>Dirección</th>
+          <th>Mañana</th>
+          <th>Tarde</th>
+          <th>Estado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-c>
+        <tr>
+          <td>{{ c.nombre }}</td>
+          <td>{{ c.direccion }}</td>
+          <td>{{ c.horaAbreMat }} – {{ c.horaCierreMat }}</td>
+          <td>{{ c.horaAbreVesp }} – {{ c.horaCierreVesp }}</td>
+          <td><p-tag [value]="c.activo ? 'Activo' : 'Inactivo'" [severity]="c.activo ? 'success' : 'danger'" /></td>
+          <td class="text-right">
+            @if (permisoComercio.canUpdate()) {
+            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Editar" (onClick)="editarComercio(c)" />
+            @if (!c.activo) {
+            <p-button icon="pi pi-replay" severity="secondary" [text]="true" [rounded]="true" pTooltip="Reactivar"
+              (onClick)="reactivarComercio(c)" />
+            }
+            }
+            @if (permisoComercio.canDelete() && c.activo) {
+            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="Dar de baja"
+              (onClick)="bajaComercio(c)" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr><td colspan="6" class="text-center p-4">Este cliente no tiene comercios.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</p-dialog>
+
+<app-comercio-dialog [(visible)]="comercioDialog" [clienteId]="clienteComercios()?.id ?? null"
+  [comercio]="comercioEditando()" (guardado)="recargarComercios()" />

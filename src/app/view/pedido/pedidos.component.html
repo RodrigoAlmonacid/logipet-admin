@@ -24,6 +24,7 @@
       <th>Vendedor</th>
       <th>Estado</th>
       <th>Importe</th>
+      <th>Peso</th>
       <th class="text-right">Acciones</th>
     </tr>
   </ng-template>
@@ -31,7 +32,10 @@
   <ng-template #body let-pedido>
     <tr>
       <td>{{ pedido.id }}</td>
-      <td>{{ pedido.cliente.comercio }}</td>
+      <td>
+        <div>{{ pedido.comercio.nombre }}</div>
+        <small class="text-color-secondary">{{ pedido.cliente.apellido }}, {{ pedido.cliente.nombre }}</small>
+      </td>
       <td>{{ pedido.empleado.nombre }} {{ pedido.empleado.apellido }}</td>
       <td>
         <p-tag [value]="estadoActual(pedido)" [severity]="severidad(estadoActual(pedido))" />
@@ -40,6 +44,13 @@
         }
       </td>
       <td>{{ pedido.importe | currency }}</td>
+      <td>
+        {{ formatoPeso(pedido.pesoGramos) }}
+        @if (pedido.pesoIncompleto) {
+        <i class="pi pi-exclamation-triangle text-orange-500 ml-1"
+          pTooltip="Hay artículos sin peso cargado: el total es parcial"></i>
+        }
+      </td>
       <td class="text-right">
         <p-button icon="pi pi-eye" severity="secondary" [text]="true" [rounded]="true" pTooltip="Ver detalle"
           (onClick)="verDetalle(pedido)" />
@@ -86,11 +97,33 @@
   <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
     <div class="flex flex-column gap-2">
       <label for="clienteId" class="text-sm font-medium">Cliente</label>
-      <p-select inputId="clienteId" formControlName="clienteId" [options]="clientesActivos()" optionLabel="comercio"
-        optionValue="id" [filter]="true" filterBy="comercio,nombre,apellido" placeholder="Seleccionar cliente"
-        styleClass="w-full" />
+      <p-select inputId="clienteId" formControlName="clienteId" [options]="clientesOpciones()" optionLabel="etiqueta"
+        optionValue="id" [filter]="true" filterBy="etiqueta" placeholder="Seleccionar cliente" styleClass="w-full" />
       @if (form.controls.clienteId.invalid && form.controls.clienteId.touched) {
       <small class="text-red-500">Elegí un cliente.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="comercioId" class="text-sm font-medium">Punto de entrega</label>
+      <div class="flex gap-2">
+        <p-select inputId="comercioId" formControlName="comercioId" [options]="comerciosOpciones()"
+          optionLabel="etiqueta" optionValue="id" optionDisabled="inactivo" class="flex-1" styleClass="w-full"
+          [placeholder]="clienteIdSel() ? 'Seleccionar punto de entrega' : 'Elegí primero un cliente'" />
+        @if (permisoComercio.canCreate() && clienteIdSel()) {
+        <p-button icon="pi pi-plus" severity="secondary" [outlined]="true" pTooltip="Nuevo punto de entrega"
+          (onClick)="nuevoPunto()" />
+        }
+        @if (permisoComercio.canUpdate() && comercioActual()) {
+        <p-button icon="pi pi-pencil" severity="secondary" [outlined]="true" pTooltip="Editar punto de entrega"
+          (onClick)="editarPunto()" />
+        }
+      </div>
+      @if (comercioActual(); as c) {
+      <small class="text-color-secondary">{{ c.direccion }}</small>
+      }
+      @if (form.controls.comercioId.invalid && form.controls.comercioId.touched) {
+      <small class="text-red-500">Elegí un punto de entrega.</small>
       }
     </div>
 
@@ -194,7 +227,8 @@
   <div class="flex flex-column gap-3">
 
     <div class="flex flex-wrap justify-content-between gap-2 text-sm">
-      <span><b>Cliente:</b> {{ p.cliente.comercio }}</span>
+      <span><b>Cliente:</b> {{ p.cliente.nombre }} {{ p.cliente.apellido }}</span>
+      <span><b>Comercio:</b> {{ p.comercio.nombre }} — {{ p.comercio.direccion }}</span>
       <span><b>Vendedor:</b> {{ p.empleado.nombre }} {{ p.empleado.apellido }}</span>
       <span><b>Fecha:</b> {{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
       <p-tag [value]="estadoActual(p)" [severity]="severidad(estadoActual(p))" />
@@ -242,6 +276,7 @@
       @for (h of p.historialEstados; track h.fechaCreac) {
       <small class="text-color-secondary">
         {{ h.fechaCreac | date: 'dd/MM HH:mm' }} · {{ h.estado.nombre }}
+        · {{ h.auditor.nombre }} {{ h.auditor.apellido }}
         @if (h.motivo) { · {{ h.motivo }} }
         @if (h.observacion) { · "{{ h.observacion }}" }
       </small>
@@ -260,3 +295,6 @@
   </div>
   }
 </p-dialog>
+
+<app-comercio-dialog [(visible)]="comercioDialogVisible" [clienteId]="clienteIdSel()" [comercio]="comercioEditando()"
+  (guardado)="onComercioGuardado($event)" />

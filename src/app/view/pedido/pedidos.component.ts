@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, untracked, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -25,15 +25,19 @@ import {
   Vista,
   puedeReabrir,
   motivoRechazo,
+  formatoPeso,
 } from '../../services/pedido.service';
 import { permissionsFor } from '../../helpers/permission-for';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ValidatorFn } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { PERMISOS } from '../../helpers/permisos.constants';
 import { TabsModule } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
+import { Comercio } from '../../services/comercio.service';
+import { ComercioDialogComponent } from '../../shared/components/comercio-campos/comercio-dialog.component';
+
 
 function stockValidator(getArticulos: () => Articulo[]): ValidatorFn {
   return (group) => {
@@ -80,7 +84,7 @@ const PESTANAS: { vista: Vista; label: string; permisos: string[] }[] = [
   imports: [
     ReactiveFormsModule, TableModule, ButtonModule, DialogModule, CurrencyPipe, DatePipe,
     SelectModule, InputNumberModule, TagModule, ToastModule, ConfirmDialogModule,
-    TabsModule, TooltipModule, TextareaModule,
+    TabsModule, TooltipModule, TextareaModule, ComercioDialogComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './pedidos.component.html',
@@ -110,13 +114,42 @@ export class PedidosComponent implements OnInit {
   protected readonly puedeCancelar = puedeCancelar;
   protected readonly esBorrador = esBorrador;
   protected readonly lineasCalculadas = signal<(LineaCalculada | null)[]>([]);
+  protected readonly formatoPeso = formatoPeso;
 
   protected readonly permisoPedido = permissionsFor('pedido');
+  protected readonly permisoComercio = permissionsFor('comercio');
 
   protected readonly form = this.fb.nonNullable.group({
     clienteId: [null as number | null, Validators.required],
+    comercioId: [null as number | null, Validators.required],
     items: this.fb.array<ItemGroup>([]),
   });
+
+  protected readonly clienteIdSel = toSignal(this.form.controls.clienteId.valueChanges, { initialValue: null });
+  private readonly comercioIdSel = toSignal(this.form.controls.comercioId.valueChanges, { initialValue: null });
+
+  protected readonly clientesOpciones = computed(() =>
+    this.clientesActivos().map((c) => ({ id: c.id, etiqueta: `${c.apellido}, ${c.nombre} · ${c.cuit}` })),
+  );
+
+  private readonly comercios = computed(
+    () => this.clientesActivos().find((c) => c.id === this.clienteIdSel())?.comercios ?? [],
+  );
+
+  protected readonly comerciosOpciones = computed(() =>
+    this.comercios().map((c) => ({
+      id: c.id,
+      etiqueta: c.activo ? c.nombre : `${c.nombre} (inactivo)`,
+      inactivo: !c.activo,
+    })),
+  );
+
+  protected readonly comercioActual = computed(
+    () => this.comercios().find((c) => c.id === this.comercioIdSel()) ?? null,
+  );
+
+  protected readonly comercioDialogVisible = signal(false);
+  protected readonly comercioEditando = signal<Comercio | null>(null);
 
   protected get items() {
     return this.form.controls.items;
@@ -192,6 +225,10 @@ export class PedidosComponent implements OnInit {
 
   constructor() {
     this.items.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.recalcular());
+    effect(() => {
+      const lista = this.comercios();
+      untracked(() => this.ajustarComercio(lista));
+    });
   }
 
   protected severidad(e: string) {
@@ -229,13 +266,13 @@ export class PedidosComponent implements OnInit {
   }
 
   protected stockPendiente(pedido: Pedido, articuloId: number): number | null {
-  if (estadoActual(pedido) !== 'pendiente') return null;
-  return pedido.articulos.find((d) => d.articuloId === articuloId)?.articulo.stock ?? null;
-}
+    if (estadoActual(pedido) !== 'pendiente') return null;
+    return pedido.articulos.find((d) => d.articuloId === articuloId)?.articulo.stock ?? null;
+  }
 
   protected openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ clienteId: null });
+    this.form.reset({ clienteId: null, comercioId: null });
     this.items.clear();
     this.agregarItem();
     this.dialogVisible.set(true);
@@ -243,7 +280,7 @@ export class PedidosComponent implements OnInit {
 
   protected openEdit(pedido: Pedido): void {
     this.editing.set(pedido);
-    this.form.reset({ clienteId: pedido.cliente.id });
+    this.form.reset({ clienteId: pedido.cliente.id, comercioId: pedido.comercio.id });
     this.items.clear();
     pedido.articulos.forEach((d) =>
       this.items.push(
@@ -258,18 +295,18 @@ export class PedidosComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const { clienteId, items } = this.form.getRawValue();
+    const { clienteId, comercioId, items } = this.form.getRawValue();
     const itemsValidos: ItemPedido[] = items.flatMap(({ articuloId, cantidad, descuentoPorcentaje }) =>
       articuloId === null ? [] : [{ articuloId, cantidad, descuentoPorcentaje }],
     );
 
 
-    if (clienteId === null || itemsValidos.length !== items.length) {
+    if (clienteId === null || comercioId === null || itemsValidos.length !== items.length) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const dto = { clienteId, items: itemsValidos };
+    const dto = { clienteId, comercioId, items: itemsValidos };
     const current = this.editing();
     this.saving.set(true);
 
@@ -480,6 +517,7 @@ export class PedidosComponent implements OnInit {
         importeNeto,
         importeIva,
         importeFinal,
+        pesoGramos: articulo.pesoGramos === null ? null : articulo.pesoGramos * cantidad,
       };
     });
 
@@ -495,6 +533,36 @@ export class PedidosComponent implements OnInit {
       (total, linea) => total + (linea?.importeFinal ?? 0),
       0,
     );
+  }
+
+  private ajustarComercio(lista: Comercio[]): void {
+    if (!lista.length) return;
+    const ctrl = this.form.controls.comercioId;
+    if (lista.some((c) => c.id === ctrl.value)) return;
+    ctrl.setValue(lista.find((c) => c.activo)?.id ?? null);
+  }
+
+  protected nuevoPunto(): void {
+    this.comercioEditando.set(null);
+    this.comercioDialogVisible.set(true);
+  }
+
+  protected editarPunto(): void {
+    const c = this.comercioActual();
+    if (!c) return;
+    this.comercioEditando.set(c);
+    this.comercioDialogVisible.set(true);
+  }
+
+  // refresca clientes (traen sus comercios) y deja seleccionado el punto guardado
+  protected onComercioGuardado(c: Comercio): void {
+    this.clienteService.list().subscribe({
+      next: (data) => {
+        this.clientesActivos.set(data.filter((x) => x.activo));
+        this.form.controls.comercioId.setValue(c.id);
+      },
+      error: (err) => this.showError(err),
+    });
   }
 
   private showError(err: HttpErrorResponse): void {
