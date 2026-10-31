@@ -39,3 +39,15 @@ app-root {
   display: block;
   min-height: 100%;
 }
+
+body {
+  overscroll-behavior-y: none;          /* evita que el pull-to-refresh recargue en medio de un escaneo */
+  -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* en la vista de depósito usá dvh, no vh: vh incluye la barra del navegador */
+.deposito-layout { min-height: 100dvh; }
+
+button, .p-button { min-height: 44px; }   /* objetivo táctil mínimo */
