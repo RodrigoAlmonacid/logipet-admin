@@ -1,0 +1,113 @@
+<p-toast position="top-center" />
+<p-confirmdialog />
+
+<div class="deposito-layout p-3 flex flex-column gap-3">
+  @if (actual(); as p) {
+  <!-- ===== pedido en curso ===== -->
+  <div class="flex align-items-center justify-content-between gap-2">
+    <div class="min-w-0">
+      <div class="text-xl font-semibold">Pedido #{{ p.id }}</div>
+      <small class="text-color-secondary">{{ p.comercio.nombre }} · {{ formatoPeso(p.pesoGramos) }}</small>
+    </div>
+    <p-tag [value]="verificadas() + ' / ' + p.lineas.length" [severity]="todoVerificado() ? 'success' : 'info'" />
+  </div>
+
+  @if (!todoVerificado()) {
+  <p-button [label]="escaneando() ? 'Cerrar cámara' : 'Escanear artículo'" icon="pi pi-camera"
+    [severity]="escaneando() ? 'secondary' : 'primary'" styleClass="w-full" (onClick)="escaneando.set(!escaneando())" />
+  }
+
+  @if (escaneando()) {
+  <app-escaner [pausado]="!!lineaActiva()" (codigo)="onCodigo($event)" />
+  <div class="flex gap-2">
+    <input pInputText [formControl]="codigoManual" inputmode="numeric" placeholder="¿No lee? Escribí el código"
+      class="flex-1" (keyup.enter)="usarCodigoManual()" />
+    <p-button icon="pi pi-check" ariaLabel="Usar código" (onClick)="usarCodigoManual()" />
+  </div>
+  }
+
+  <div class="flex flex-column gap-2">
+    @for (l of lineasOrdenadas(); track l.articuloId) {
+    <div class="border-1 surface-border border-round p-3 flex align-items-center gap-3"
+      [class.surface-100]="l.verificado">
+      <i [class]="l.verificado ? 'pi pi-check-circle text-green-500 text-2xl' : 'pi pi-circle text-color-secondary text-2xl'"></i>
+      <div class="flex-1 min-w-0">
+        <div class="font-medium">{{ l.nombre }}</div>
+        <small class="text-color-secondary">{{ l.presentacion }}</small>
+        @if (l.cantidadOriginal !== null) {
+        <div class="text-orange-500 text-sm">Pedido: {{ l.cantidadOriginal }} · {{ l.justificacionAjuste }}</div>
+        }
+      </div>
+      <div class="text-xl font-semibold">×{{ l.cantidad }}</div>
+    </div>
+    }
+  </div>
+
+  <div class="flex gap-2 mt-2">
+    <p-button label="Soltar" icon="pi pi-undo" severity="secondary" [outlined]="true" [disabled]="procesando()"
+      (onClick)="confirmarSoltar()" />
+    <p-button class="flex-1" styleClass="w-full" label="Marcar preparado" icon="pi pi-check"
+      [disabled]="!todoVerificado()" [loading]="procesando()" (onClick)="confirmarPreparado()" />
+  </div>
+
+  } @else {
+  <!-- ===== cola ===== -->
+  <div class="flex align-items-center justify-content-between">
+    <h2 class="m-0">Cola de depósito</h2>
+    <p-button icon="pi pi-refresh" [text]="true" [rounded]="true" ariaLabel="Actualizar" [loading]="cargando()"
+      (onClick)="cargar()" />
+  </div>
+
+  @for (p of cola(); track p.id) {
+  <div class="border-1 surface-border border-round p-3 flex align-items-center justify-content-between gap-3">
+    <div class="min-w-0">
+      <div class="font-semibold">#{{ p.id }} · {{ p.comercio.nombre }}</div>
+      <small class="text-color-secondary">
+        {{ p.lineas.length }} artículos · {{ formatoPeso(p.pesoGramos) }} · espera {{ espera(p) }}
+      </small>
+    </div>
+    <p-button label="Tomar" icon="pi pi-box" [loading]="procesando()" (onClick)="tomar(p)" />
+  </div>
+  } @empty {
+  @if (!cargando()) {
+  <div class="text-center text-color-secondary p-5">No hay pedidos por preparar.</div>
+  }
+  }
+  }
+</div>
+
+<!-- cantidad del artículo escaneado -->
+<p-dialog [header]="lineaActiva()?.nombre ?? ''" [visible]="!!lineaActiva()"
+  (visibleChange)="!$event && lineaActiva.set(null)" [modal]="true" [draggable]="false"
+  [style]="{ width: '95vw', maxWidth: '26rem' }">
+  @if (lineaActiva(); as l) {
+  <div class="flex flex-column gap-3">
+    <div>
+      <small class="text-color-secondary">{{ l.presentacion }}</small>
+      <div>Pedido: <b>{{ l.cantidad }}</b></div>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Cantidad armada</label>
+      <p-inputnumber [formControl]="cantidadCtrl" [showButtons]="true" buttonLayout="horizontal" [min]="0"
+        [max]="l.cantidad" [useGrouping]="false" inputStyleClass="text-center w-full" styleClass="w-full" />
+    </div>
+
+    @if (hayFaltante()) {
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Justificación del faltante</label>
+      <textarea pTextarea [formControl]="justificacionCtrl" rows="3" class="w-full"
+        placeholder="Ej.: sin stock en góndola, bolsa dañada…"></textarea>
+      @if (justificacionCtrl.touched && justificacionCtrl.value.trim().length < 5) {
+      <small class="text-red-500">Escribí al menos 5 caracteres.</small>
+      }
+    </div>
+    }
+
+    <div class="flex justify-content-end gap-2">
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="lineaActiva.set(null)" />
+      <p-button label="Confirmar" icon="pi pi-check" [loading]="procesando()" (onClick)="confirmarLinea()" />
+    </div>
+  </div>
+  }
+</p-dialog>

@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from './../../environments/environment';
+import { Comercio, ComercioDatos } from './comercio.service';
+import { map } from 'rxjs';
 
 export type CondicionIva = 'RESPONSABLE_INSCRIPTO' | 'MONOTRIBUTO' | 'EXENTO' | 'CONSUMIDOR_FINAL';
 
@@ -11,43 +13,27 @@ export const CONDICIONES_IVA: { value: CondicionIva; label: string }[] = [
   { value: 'EXENTO', label: 'Exento' },
 
 ];
-export type UpdateCliente = Partial<CreateCliente> & {
-  activo?: boolean;
-};
+export type UpdateCliente = Partial<Omit<CreateCliente, 'comercio'>> & { activo?: boolean };
 export interface Cliente {
   id: number;
   nombre: string;
   apellido: string;
   email: string;
-  comercio: string;
+  telefono: string;
   cuit: string;
   condicionIva: CondicionIva;
   activo: boolean;
-  telefono: string;
-  horaAbreMat: string;
-  horaCierreMat: string;
-  horaAbreVesp: string;
-  horaCierreVesp: string;
-  direccion: string;
-  latitud: number;
-  longitud: number;
+  comercios: Comercio[];
 }
 
 export interface CreateCliente {
   nombre: string;
   apellido: string;
   email: string;
-  comercio: string;
+  telefono: string;
   cuit: string;
   condicionIva: CondicionIva;
-  telefono: string;
-  horaAbreMat: string;
-  horaCierreMat: string;
-  horaAbreVesp: string;
-  horaCierreVesp: string;
-  direccion: string;
-  latitud: number;
-  longitud: number;
+  comercio: ComercioDatos; // el primer punto de entrega
 }
 
 export interface CreateClienteResponse {
@@ -65,7 +51,9 @@ export class ClienteService {
   }
 
   create(dto: CreateCliente) {
-    return this.http.post<CreateClienteResponse>(this.url, dto);
+    return this.http
+      .post<CreateClienteResponse>(this.url, dto)
+      .pipe(map((res) => res.cliente));
   }
 
   update(id: number, dto: UpdateCliente) {

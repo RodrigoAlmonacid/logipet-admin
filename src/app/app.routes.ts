@@ -79,6 +79,10 @@ export const routes: Routes = [
         canActivate: [permissionGuard], // protejo con roles
         data: { permissions: PEDIDOS_ACCESO }
       },
+      {
+        path: 'deposito',
+        loadComponent: () => import('./view/deposito/deposito.component').then((m) => m.DepositoComponent),
+      },
     ],
   },
 
