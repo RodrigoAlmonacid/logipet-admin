@@ -16,15 +16,40 @@
   </p-tablist>
 </p-tabs>
 
-<p-table [value]="pedidos()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id">
+<p-table [value]="pedidos()" [loading]="loading()" [paginator]="true" [rows]="10" dataKey="id" sortField="id"
+  [sortOrder]="-1">
   <ng-template #header>
     <tr>
-      <th>#</th>
-      <th>Cliente</th>
-      <th>Vendedor</th>
+      <th pSortableColumn="id">
+        # <p-sortIcon field="id" />
+      </th>
+
+      <!-- Ordena y filtra por el nombre del comercio -->
+      <th pSortableColumn="comercio.nombre">
+        Cliente <p-sortIcon field="comercio.nombre" />
+        <p-columnFilter type="text" field="comercio.nombre" display="menu" class="ml-auto"
+          placeholder="Buscar cliente..." />
+      </th>
+
+      <!-- Ordena y filtra por el nombre del vendedor -->
+      <th pSortableColumn="empleado.nombre">
+        Vendedor <p-sortIcon field="empleado.nombre" />
+        <p-columnFilter type="text" field="empleado.nombre" display="menu" class="ml-auto"
+          placeholder="Buscar vendedor..." />
+      </th>
+
+      <!-- El estado es computado por una función, dejamos solo la etiqueta -->
       <th>Estado</th>
-      <th>Importe</th>
-      <th>Peso</th>
+
+      <th pSortableColumn="importe">
+        Importe <p-sortIcon field="importe" />
+        <p-columnFilter type="numeric" field="importe" display="menu" currency="ARS" class="ml-auto" />
+      </th>
+
+      <th pSortableColumn="pesoGramos">
+        Peso <p-sortIcon field="pesoGramos" />
+      </th>
+
       <th class="text-right">Acciones</th>
     </tr>
   </ng-template>
@@ -133,9 +158,16 @@
       @for (item of items.controls; track $index) {
       <div [formGroup]="item" class="flex flex-column gap-2 p-2 border-1 surface-border border-round">
         <div class="flex justify-content-between align-items-start">
-          <p-select formControlName="articuloId" [options]="articulos()" optionLabel="nombre" optionValue="id"
-            [filter]="true" filterBy="nombre,codigo" placeholder="Producto" styleClass="w-full"
-            (onChange)="recalcular()" />
+          <p-select formControlName="articuloId" [options]="articulosOpciones()" optionLabel="etiqueta" optionValue="id"
+            [filter]="true" filterBy="nombre,codigo,marca.nombre,presentacion" placeholder="Producto"
+            styleClass="w-full" (onChange)="recalcular()">
+            <ng-template #item let-a>
+              <div class="flex flex-column">
+                <span>{{ a.nombre }} ({{ a.presentacion }})</span>
+                <small class="text-color-secondary">{{ a.marca?.nombre ?? 'Sin marca' }} · {{ a.codigo }}</small>
+              </div>
+            </ng-template>
+          </p-select>
           <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="quitarItem($index)" />
         </div>
 
@@ -143,16 +175,19 @@
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Cantidad</label>
             <p-inputnumber formControlName="cantidad" [min]="1" [max]="stockDe($index) ?? undefined"
-              [showButtons]="true" styleClass="w-full" (onInput)="recalcular()" />
+              [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus" styleClass="w-full" inputStyleClass="w-full text-center"
+              (onInput)="recalcular()" />
           </div>
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Stock disponible</label>
-            <div class="p-2 surface-100 border-round font-semibold">{{ stockDe($index) ?? '—' }}</div>
+            <div class="p-2 surface-100 border-round font-semibold flex flex-column flex-1">{{ stockDe($index) ?? '—' }}
+            </div>
           </div>
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Descuento %</label>
-            <p-inputnumber formControlName="descuentoPorcentaje" [min]="0" [max]="100" suffix="%" styleClass="w-full"
-              (onInput)="recalcular()" />
+            <p-inputnumber formControlName="descuentoPorcentaje" [min]="0" [max]="100" suffix="%"
+              class="flex flex-column flex-1" styleClass="w-full" (onInput)="recalcular()" />
           </div>
         </div>
 
@@ -275,7 +310,7 @@
       <span class="text-sm font-medium">Historial</span>
       @for (h of p.historialEstados; track h.fechaCreac) {
       <small class="text-color-secondary">
-        {{ h.fechaCreac | date: 'dd/MM HH:mm' }} · {{ h.estado.nombre }}
+        {{ h.fechaCreac | date: 'dd/MM/yyyy HH:mm' }} · {{ h.estado.descripcion }}
         · {{ h.auditor.nombre }} {{ h.auditor.apellido }}
         @if (h.motivo) { · {{ h.motivo }} }
         @if (h.observacion) { · "{{ h.observacion }}" }

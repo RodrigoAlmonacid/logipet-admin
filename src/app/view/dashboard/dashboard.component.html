@@ -1,1 +1,97 @@
-<p>dashboard works!</p>
+<p-toast />
+
+<h2 class="m-0 mb-4">Dashboard</h2>
+
+@if (resumen(); as r) {
+  @if (r.ventas; as v) {
+    <div class="grid">
+      <div class="col-12 md:col-4">
+        <p-card header="Mejor venta">
+          <div class="text-2xl font-bold text-primary-700">{{ v.mejorVenta.importe | currency }}</div>
+          <p class="text-color-secondary text-sm m-0 mt-2">
+            Pedido #{{ v.mejorVenta.id }} - {{ v.mejorVenta.comercio }}
+          </p>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <p-card header="Mayor facturación">
+          <div class="text-2xl font-bold text-primary-700">{{ v.topFacturacion.nombre }}</div>
+          <p class="text-color-secondary text-sm m-0 mt-2">
+            Total facturado: {{ v.topFacturacion.total | currency }}
+          </p>
+        </p-card>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <p-card header="Mayor variedad vendida">
+          <div class="text-2xl font-bold text-primary-700">{{ v.topVariedad.nombre }}</div>
+          <p class="text-color-secondary text-sm m-0 mt-2">
+            {{ v.topVariedad.distintos }} productos distintos
+          </p>
+        </p-card>
+      </div>
+
+      <div class="col-12 lg:col-6">
+        <p-card header="Unidades vendidas por marca">
+          <p-chart type="pie" [data]="dataMarcas()" [options]="opcionesTorta" height="250px" />
+        </p-card>
+      </div>
+
+      <div class="col-12 lg:col-6">
+        <p-card header="Mejores comercios (top 5)">
+          <p-table [value]="v.mejoresComercios" styleClass="p-datatable-sm">
+            <ng-template #header>
+              <tr>
+                <th>Comercio</th>
+                <th class="text-right">Total facturado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-c>
+              <tr>
+                <td class="font-semibold">{{ c.comercio }}</td>
+                <td class="text-right">{{ c.total | currency }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </div>
+    </div>
+  } @else {
+    <p-card>
+      <p class="text-center text-color-secondary m-0 p-3">
+        Todavía no hay pedidos entregados para mostrar métricas.
+      </p>
+    </p-card>
+  }
+
+  <div class="mt-4">
+    <p-card header="Alertas de stock">
+      <p-table [value]="r.alertasStock" [rows]="5" [paginator]="true" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr>
+            <th>Producto</th>
+            <th class="text-right">Ventas por semana (promedio)</th>
+            <th class="text-right">Stock ideal (2 semanas)</th>
+            <th class="text-right">Stock actual</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-prod>
+          <tr>
+            <td>{{ prod.nombre }} ({{ prod.presentacion }})</td>
+            <td class="text-right">{{ prod.ventasPromedioSemanal }} u.</td>
+            <td class="text-right text-color-secondary">{{ prod.stockIdeal }} u.</td>
+            <td class="text-right font-bold text-red-500">{{ prod.stock }} u.</td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="4" class="text-center p-4">
+              El stock está saludable según las ventas de las últimas 4 semanas.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+}
