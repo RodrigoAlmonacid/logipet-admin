@@ -133,9 +133,16 @@
       @for (item of items.controls; track $index) {
       <div [formGroup]="item" class="flex flex-column gap-2 p-2 border-1 surface-border border-round">
         <div class="flex justify-content-between align-items-start">
-          <p-select formControlName="articuloId" [options]="articulos()" optionLabel="nombre" optionValue="id"
-            [filter]="true" filterBy="nombre,codigo" placeholder="Producto" styleClass="w-full"
-            (onChange)="recalcular()" />
+          <p-select formControlName="articuloId" [options]="articulosOpciones()" optionLabel="etiqueta" optionValue="id"
+            [filter]="true" filterBy="nombre,codigo,marca.nombre,presentacion" placeholder="Producto"
+            styleClass="w-full" (onChange)="recalcular()">
+            <ng-template #item let-a>
+              <div class="flex flex-column">
+                <span>{{ a.nombre }} ({{ a.presentacion }})</span>
+                <small class="text-color-secondary">{{ a.marca?.nombre ?? 'Sin marca' }} · {{ a.codigo }}</small>
+              </div>
+            </ng-template>
+          </p-select>
           <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="quitarItem($index)" />
         </div>
 
@@ -143,15 +150,17 @@
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Cantidad</label>
             <p-inputnumber formControlName="cantidad" [min]="1" [max]="stockDe($index) ?? undefined"
-              [showButtons]="true" styleClass="w-full" (onInput)="recalcular()" />
+              [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus" styleClass="w-full" inputStyleClass="w-full text-center"
+              (onInput)="recalcular()" />
           </div>
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Stock disponible</label>
-            <div class="p-2 surface-100 border-round font-semibold">{{ stockDe($index) ?? '—' }}</div>
+            <div class="p-2 surface-100 border-round font-semibold flex flex-column flex-1">{{ stockDe($index) ?? '—' }}</div>
           </div>
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Descuento %</label>
-            <p-inputnumber formControlName="descuentoPorcentaje" [min]="0" [max]="100" suffix="%" styleClass="w-full"
+            <p-inputnumber formControlName="descuentoPorcentaje" [min]="0" [max]="100" suffix="%" class="flex flex-column flex-1" styleClass="w-full"
               (onInput)="recalcular()" />
           </div>
         </div>
