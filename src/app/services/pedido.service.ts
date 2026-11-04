@@ -108,6 +108,10 @@ export function motivoRechazo(p: Pedido): string | null {
 }
 
 export function estadoActual(pedido: Pedido): string {
+  return pedido.historialEstados.find((h) => h.fechaFin === null)?.estado.nombre ?? '—';
+}
+
+export function estadoActualVista(pedido: Pedido): string {
   return pedido.historialEstados.find((h) => h.fechaFin === null)?.estado.descripcion ?? '—';
 }
 
