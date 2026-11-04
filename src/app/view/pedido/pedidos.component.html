@@ -63,7 +63,7 @@
       </td>
       <td>{{ pedido.empleado.nombre }} {{ pedido.empleado.apellido }}</td>
       <td>
-        <p-tag [value]="estadoActual(pedido)" [severity]="severidad(estadoActual(pedido))" />
+        <p-tag [value]="estadoActualVista(pedido)" [severity]="severidad(estadoActual(pedido))" />
         @if (motivoRechazo(pedido); as m) {
         <small class="block text-color-secondary mt-1">{{ m }}</small>
         }
@@ -266,7 +266,7 @@
       <span><b>Comercio:</b> {{ p.comercio.nombre }} — {{ p.comercio.direccion }}</span>
       <span><b>Vendedor:</b> {{ p.empleado.nombre }} {{ p.empleado.apellido }}</span>
       <span><b>Fecha:</b> {{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-      <p-tag [value]="estadoActual(p)" [severity]="severidad(estadoActual(p))" />
+      <p-tag [value]="estadoActualVista(p)" [severity]="severidad(estadoActual(p))" />
     </div>
 
     <p-table [value]="p.lineas" styleClass="p-datatable-sm">
