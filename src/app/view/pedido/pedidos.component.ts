@@ -26,6 +26,7 @@ import {
   puedeReabrir,
   motivoRechazo,
   formatoPeso,
+  estadoActualVista,
 } from '../../services/pedido.service';
 import { permissionsFor } from '../../helpers/permission-for';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -109,6 +110,7 @@ export class PedidosComponent implements OnInit {
 
   // expuestos al template, para no repetir la lógica de estado en el HTML
   protected readonly estadoActual = estadoActual;
+  protected readonly estadoActualVista = estadoActualVista;
   protected readonly puedeEditar = puedeEditar;
   protected readonly puedeConfirmar = puedeConfirmar;
   protected readonly puedeCancelar = puedeCancelar;
