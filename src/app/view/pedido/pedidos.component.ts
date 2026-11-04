@@ -177,6 +177,13 @@ export class PedidosComponent implements OnInit {
   protected readonly vistaActiva = signal<Vista | null>(null);
   protected readonly viendo = signal<Pedido | null>(null);
 
+  protected readonly articulosOpciones = computed(() =>
+    this.articulos().map((a) => ({
+      ...a,
+      etiqueta: `${a.nombre} (${a.presentacion})`,
+    })),
+  );
+
   ngOnInit(): void {
     const primera = this.pestanas()[0];
     if (primera) {

@@ -8,6 +8,7 @@ import { Comercio } from './comercio.service';
 export interface Estado {
   id: number;
   nombre: string;
+  descripcion: string;
 }
 
 export interface EmpleadoResumen {
@@ -107,7 +108,7 @@ export function motivoRechazo(p: Pedido): string | null {
 }
 
 export function estadoActual(pedido: Pedido): string {
-  return pedido.historialEstados.find((h) => h.fechaFin === null)?.estado.nombre ?? '—';
+  return pedido.historialEstados.find((h) => h.fechaFin === null)?.estado.descripcion ?? '—';
 }
 
 export function puedeEditar(p: Pedido): boolean {
