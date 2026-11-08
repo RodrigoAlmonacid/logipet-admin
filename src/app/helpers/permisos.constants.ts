@@ -32,6 +32,7 @@ export const PERMISOS = {
     PEDIDO_VIEW_ALL: 'pedido:view_all',
     PEDIDO_PREPARE: 'pedido:prepare',
     PEDIDO_ROUTE: 'pedido:route',
+    STOCK_VIEW: 'stock:view',
 } as const;
 
 export type PermisoCodigo = (typeof PERMISOS)[keyof typeof PERMISOS];

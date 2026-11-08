@@ -82,6 +82,12 @@ export const routes: Routes = [
       {
         path: 'deposito',
         loadComponent: () => import('./view/deposito/deposito.component').then((m) => m.DepositoComponent),
+        data: { permissions: [PERMISOS.PEDIDO_PREPARE] },
+      },
+      {
+        path: 'reabastecimiento',
+        loadComponent: () => import('./view/reabastecimiento/reabastecimiento.component').then((m) => m.ReabastecimientoComponent),
+        data: { permissions: [PERMISOS.STOCK_VIEW]},
       },
     ],
   },
