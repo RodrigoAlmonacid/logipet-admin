@@ -34,6 +34,7 @@ export class SidebarNavComponent {
     { label: 'Roles', icon: 'pi pi-shield', route: '/roles', permiso: [PERMISOS.ROL_MANAGE] },
     { label: 'Pedidos', icon: 'pi pi-shopping-bag', route: '/pedidos', permiso: PEDIDOS_ACCESO },
     { label: 'Depósito', icon: 'pi pi-box', route: '/deposito', permiso: [PERMISOS.PEDIDO_PREPARE] },
+    { label: 'Reabastecimiento', icon: 'pi pi-truck', route: '/reabastecimiento', permiso: [PERMISOS.STOCK_VIEW] },
   ];
 
   protected readonly menuVisible = computed(() =>
