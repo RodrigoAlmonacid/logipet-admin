@@ -80,6 +80,18 @@ export const routes: Routes = [
         data: { permissions: PEDIDOS_ACCESO }
       },
       {
+        path: 'plan-rutas',
+        loadComponent: () => import('./view/plan-ruta/plan-ruta-list.component').then((m) => m.PlanRutaListComponent),
+        canActivate: [permissionGuard],
+        data: { permissions: [PERMISOS.PLANRUTA_VIEW] },
+        },
+      {
+        path: 'plan-rutas/:id',
+        loadComponent: () => import('./view/plan-ruta/plan-ruta-detalle.component').then((m) => m.PlanRutaDetalleComponent),
+        canActivate: [permissionGuard],
+        data: { permissions: [PERMISOS.PLANRUTA_VIEW] },
+      },
+      {
         path: 'deposito',
         loadComponent: () => import('./view/deposito/deposito.component').then((m) => m.DepositoComponent),
         data: { permissions: [PERMISOS.PEDIDO_PREPARE] },
