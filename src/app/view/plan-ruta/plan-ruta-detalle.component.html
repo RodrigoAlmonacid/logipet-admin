@@ -1,0 +1,161 @@
+<p-toast />
+
+@if (plan(); as p) {
+  <!-- Header con datos del plan -->
+  <div class="flex align-items-center justify-content-between mb-4">
+    <div>
+      <h2 class="m-0">Plan de Ruta #{{ p.id }}</h2>
+      <div class="text-color-secondary mt-1">
+        {{ formatDate(p.fecha) }} · {{ p.deposito.nombre }} ·
+        Hora límite: {{ formatDate(p.horaLimite) }}
+      </div>
+    </div>
+    <div class="flex align-items-center gap-2">
+      <p-tag [value]="p.estado" [severity]="estadoSeverity(p.estado)" />
+      @if (canOptimize()) {
+        <p-button
+          [label]="p.estado === 'OPTIMIZADO' ? 'Re-optimizar' : 'Optimizar'"
+          icon="pi pi-bolt"
+          severity="success"
+          [loading]="optimizing()"
+          (onClick)="optimizar()"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Resumen estadístico -->
+  @if (p.envios.length > 0) {
+    <div class="grid mb-4">
+      <div class="col-3">
+        <p-card styleClass="text-center">
+          <ng-template #title>
+            <i class="pi pi-truck mr-1"></i> Envíos
+          </ng-template>
+          <div class="text-2xl font-bold">{{ p.envios.length }}</div>
+        </p-card>
+      </div>
+      <div class="col-3">
+        <p-card styleClass="text-center">
+          <ng-template #title>
+            <i class="pi pi-box mr-1"></i> Pedidos
+          </ng-template>
+          <div class="text-2xl font-bold">{{ totalPedidos }}</div>
+        </p-card>
+      </div>
+      <div class="col-3">
+        <p-card styleClass="text-center">
+          <ng-template #title>
+            <i class="pi pi-map mr-1"></i> Distancia
+          </ng-template>
+          <div class="text-2xl font-bold">{{ formatDistance(totalDistancia) }}</div>
+        </p-card>
+      </div>
+      <div class="col-3">
+        <p-card styleClass="text-center">
+          <ng-template #title>
+            <i class="pi pi-clock mr-1"></i> Duración
+          </ng-template>
+          <div class="text-2xl font-bold">{{ formatDuration(totalDuracion) }}</div>
+        </p-card>
+      </div>
+    </div>
+  }
+
+  <!-- Mapa Leaflet -->
+  <p-card styleClass="mb-4">
+    <ng-template #title>
+      <i class="pi pi-map mr-1"></i> Rutas optimizadas
+    </ng-template>
+
+    @if (p.envios.length > 0 && p.envios.some(e => e.rutaOptima)) {
+      <div #map class="map-container"></div>
+      <!-- Leyenda de colores por vehículo -->
+      <div class="flex gap-3 mt-2 flex-wrap">
+        @for (envio of p.envios; let v = $index; track envio.id) {
+          <div class="flex align-items-center gap-1">
+            <span
+              style="display:inline-block;width:16px;height:16px;border-radius:50%;background:#16a34a;"
+            ></span>
+            @if (v === 0) {
+              <small>Depósito</small>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="text-center p-6">
+        <i class="pi pi-map text-4xl text-color-secondary"></i>
+        <p class="mt-2 text-color-secondary">
+          @if (p.estado === 'PENDIENTE') {
+            Este plan no está optimizado todavía. Hacé clic en "Optimizar" para generar las rutas.
+          } @else if (p.estado === 'FALLIDO') {
+            La última optimización falló. Revisá los pedidos disponibles y volvé a intentar.
+          } @else {
+            No hay rutas para mostrar.
+          }
+        </p>
+      </div>
+    }
+  </p-card>
+
+  <!-- Lista de envíos -->
+  @if (p.envios.length > 0) {
+    <p-card>
+      <ng-template #title>
+        <i class="pi pi-list mr-1"></i> Envíos ({{ p.envios.length }})
+      </ng-template>
+
+      @for (envio of p.envios; let v = $index; track envio.id) {
+        <div class="mb-3 pb-3" [style.border-bottom]="v < p.envios.length - 1 ? '1px solid var(--surface-border)' : 'none'">
+          <div class="flex justify-content-between align-items-center mb-2">
+            <h4 class="m-0">
+              <i class="pi pi-truck mr-1"></i>
+              Camión {{ envio.camion?.interno ?? envio.camionId }}
+              ({{ envio.camion?.marca ?? '?' }})
+            </h4>
+            <div class="text-sm text-color-secondary">
+              {{ formatDistance(envio.distanciaMetros ?? 0) }} ·
+              {{ formatDuration(envio.duracionSegundos ?? 0) }} ·
+              {{ envio.pedidos.length }} parada(s)
+            </div>
+          </div>
+
+          <div class="grid row-gap-1 ml-4">
+            @for (pedido of envio.pedidos; track pedido.id) {
+              <div class="col-12 flex justify-content-between">
+                <div>
+                  <strong>#{{ pedido.ordenRuta }}</strong>
+                  {{ pedido.comercio.nombre }} — {{ pedido.comercio.direccion }}
+                </div>
+                <div class="text-sm text-color-secondary">
+                  @if (pedido.llegadaEstimada) {
+                    ETA: {{ formatTime(pedido.llegadaEstimada) }}
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </p-card>
+  }
+} @else if (loading()) {
+  <div class="text-center p-6">
+    <i class="pi pi-spin pi-spinner text-4xl"></i>
+    <p class="mt-2">Cargando plan de ruta...</p>
+  </div>
+} @else {
+  <div class="text-center p-6">
+    <p>No se encontró el plan de ruta.</p>
+  </div>
+}
+
+<style>
+  .map-container {
+    width: 100%;
+    height: 500px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+</style>
