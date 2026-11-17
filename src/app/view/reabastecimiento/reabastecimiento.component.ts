@@ -34,7 +34,7 @@ export class ReabastecimientoComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly filtro = signal<Filtro>('accion');
 
-  protected readonly opcionesFiltro = [
+  protected readonly opcionesFiltro: { label: string; value: Filtro }[] = [
     { label: 'Requieren acción', value: 'accion' },
     { label: 'Alta demanda (A)', value: 'altaDemanda' },
     { label: 'Todos', value: 'todos' },

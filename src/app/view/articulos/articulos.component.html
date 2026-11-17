@@ -11,15 +11,51 @@
 <p-table [value]="articulos()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
   <ng-template #header>
     <tr>
-      <th>Código</th>
-      <th>Nombre</th>
-      <th>Marca</th>
-      <th>Descripción</th>
-      <th>Presentación</th>
-      <th>Precio</th>
-      <th>IVA (alicuota)</th>
-      <th>Stock</th>
-      @if (permisoArticulo.hasRowActions()){
+      <th pSortableColumn="codigo">
+        Código
+        <p-sortIcon field="codigo" />
+        <p-columnFilter field="codigo" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="nombre">
+        Nombre
+        <p-sortIcon field="nombre" />
+        <p-columnFilter field="nombre" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="marca.nombre">
+        Marca
+        <p-sortIcon field="marca.nombre" />
+        <p-columnFilter field="marca.nombre" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="descripcion">
+        Descripción
+        <p-sortIcon field="descripcion" />
+        <p-columnFilter field="descripcion" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="presentacion">
+        Presentación
+        <p-sortIcon field="presentacion" />
+        <p-columnFilter field="presentacion" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="precio">
+        Precio
+        <p-sortIcon field="precio" />
+        <p-columnFilter field="precio" type="numeric" display="menu" />
+      </th>
+
+      <th>IVA (alícuota)</th>
+
+      <th pSortableColumn="stock">
+        Stock
+        <p-sortIcon field="stock" />
+        <p-columnFilter field="stock" type="numeric" display="menu" />
+      </th>
+
+      @if (permisoArticulo.hasRowActions()) {
       <th class="text-right">Acciones</th>
       }
     </tr>
@@ -33,14 +69,22 @@
       <td>{{ articulo.descripcion }}</td>
       <td>{{ articulo.presentacion }}</td>
       <td>{{ articulo.precio | currency }}</td>
-      <td>{{ articulo.alicuotaIva?.porcentaje ?? '—' }} % ({{ articulo.alicuotaIva?.descripcion ?? '—' }})</td>
+      <td>
+        {{ articulo.alicuotaIva?.porcentaje ?? '—' }} %
+        ({{ articulo.alicuotaIva?.descripcion ?? '—' }})
+      </td>
       <td>{{ articulo.stock }}</td>
-      @if (permisoArticulo.hasRowActions()){
+
+      @if (permisoArticulo.hasRowActions()) {
       <td class="text-right">
-        @if (permisoArticulo.canUpdate()){<p-button icon="pi pi-pencil" [text]="true" [rounded]="true"
-          (onClick)="openEdit(articulo)" />}
-        @if (permisoArticulo.canDelete()){<p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-          (onClick)="confirmRemove(articulo)" />}
+        @if (permisoArticulo.canUpdate()) {
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" (onClick)="openEdit(articulo)" />
+        }
+
+        @if (permisoArticulo.canDelete()) {
+        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+          (onClick)="confirmRemove(articulo)" />
+        }
       </td>
       }
     </tr>
@@ -48,7 +92,9 @@
 
   <ng-template #emptymessage>
     <tr>
-      <td colspan="8" class="text-center p-4">No hay artículos cargados.</td>
+      <td colspan="9" class="text-center p-4">
+        No hay artículos cargados.
+      </td>
     </tr>
   </ng-template>
 </p-table>

@@ -65,7 +65,12 @@ export class EmpleadosComponent implements OnInit {
     this.loading.set(true);
     this.empleadoService.list().subscribe({
       next: (data) => {
-        this.empleados.set(data);
+        this.empleados.set(
+          data.map(emp => ({
+            ...emp,
+            nombreCompleto: `${emp.apellido}, ${emp.nombre}`
+          }))
+        );
         this.loading.set(false);
       },
       error: (err) => {

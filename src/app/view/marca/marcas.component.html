@@ -6,12 +6,31 @@
   @if (permisoMarca.canCreate()) { <p-button label="Nueva marca" icon="pi pi-plus" (onClick)="openCreate()" /> }
 </div>
 
-<p-table [value]="marcas()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
+<p-table
+  [value]="marcas()"
+  [loading]="loading()"
+  [paginator]="true"
+  [rows]="10"
+  [rowHover]="true"
+  dataKey="id"
+>
   <ng-template #header>
     <tr>
-      <th>Nombre</th>
+      <th pSortableColumn="nombre">
+        Nombre
+        <p-sortIcon field="nombre" />
+
+        <p-columnFilter
+          type="text"
+          field="nombre"
+          display="menu"
+          class="ml-auto"
+          placeholder="Buscar marca..."
+        />
+      </th>
+
       @if (permisoMarca.hasRowActions()) {
-      <th class="text-right">Acciones</th>
+        <th class="text-right">Acciones</th>
       }
     </tr>
   </ng-template>

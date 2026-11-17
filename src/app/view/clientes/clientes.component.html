@@ -11,13 +11,44 @@
 <p-table [value]="clientes()" [loading]="loading()" [paginator]="true" [rows]="10" [rowHover]="true" dataKey="id">
   <ng-template #header>
     <tr>
-      <th>Cliente</th>
-      <th>CUIT</th>
-      <th>Condición IVA</th>
-      <th>Email</th>
-      <th>Teléfono</th>
+      <th pSortableColumn="nombreCompleto">
+        Cliente
+        <p-sortIcon field="nombreCompleto" />
+        <p-columnFilter field="nombreCompleto" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="cuit">
+        CUIT
+        <p-sortIcon field="cuit" />
+        <p-columnFilter field="cuit" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="condicionIva">
+        Condición IVA
+        <p-sortIcon field="condicionIva" />
+        <p-columnFilter field="condicionIva" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="email">
+        Email
+        <p-sortIcon field="email" />
+        <p-columnFilter field="email" type="text" display="menu" />
+      </th>
+
+      <th pSortableColumn="telefono">
+        Teléfono
+        <p-sortIcon field="telefono" />
+        <p-columnFilter field="telefono" type="text" display="menu" />
+      </th>
+
       <th>Comercios</th>
-      <th>Estado</th>
+
+      <th pSortableColumn="activo">
+        Estado
+        <p-sortIcon field="activo" />
+        <p-columnFilter field="activo" type="boolean" display="menu" />
+      </th>
+
       @if (permisoCliente.hasRowActions() || permisoComercio.canView()) {
       <th class="text-right">Acciones</th>
       }
@@ -31,31 +62,38 @@
       <td>{{ etiquetaCondicionIva(cli.condicionIva) }}</td>
       <td>{{ cli.email }}</td>
       <td>{{ cli.telefono }}</td>
+
       <td>
         @if (cli.comercios.length) {
         {{ cli.comercios[0].nombre }}
         @if (cli.comercios.length > 1) {
-        <small class="text-color-secondary"> +{{ cli.comercios.length - 1 }}</small>
+        <small class="text-color-secondary">
+          +{{ cli.comercios.length - 1 }}
+        </small>
         }
         } @else {
         <span class="text-color-secondary">Sin comercios</span>
         }
       </td>
+
       <td>
         <p-tag [value]="cli.activo ? 'Activo' : 'Inactivo'" [severity]="cli.activo ? 'success' : 'danger'" />
       </td>
+
       @if (permisoCliente.hasRowActions() || permisoComercio.canView()) {
       <td class="text-right">
         @if (permisoComercio.canView()) {
-        <p-button icon="pi pi-map-marker" severity="secondary" [text]="true" [rounded]="true"
-          pTooltip="Comercios" (onClick)="verComercios(cli)" />
+        <p-button icon="pi pi-map-marker" severity="secondary" [text]="true" [rounded]="true" pTooltip="Comercios"
+          (onClick)="verComercios(cli)" />
         }
+
         @if (permisoCliente.canUpdate()) {
         <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Editar" (onClick)="openEdit(cli)" />
         }
+
         @if (permisoCliente.canDelete()) {
-        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
-          [disabled]="!cli.activo" pTooltip="Dar de baja" (onClick)="confirmRemove(cli)" />
+        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [disabled]="!cli.activo"
+          pTooltip="Dar de baja" (onClick)="confirmRemove(cli)" />
         }
       </td>
       }
@@ -63,7 +101,11 @@
   </ng-template>
 
   <ng-template #emptymessage>
-    <tr><td colspan="8" class="text-center p-4">No hay clientes cargados.</td></tr>
+    <tr>
+      <td colspan="8" class="text-center p-4">
+        No hay clientes cargados.
+      </td>
+    </tr>
   </ng-template>
 </p-table>
 
@@ -170,7 +212,8 @@
           <td><p-tag [value]="c.activo ? 'Activo' : 'Inactivo'" [severity]="c.activo ? 'success' : 'danger'" /></td>
           <td class="text-right">
             @if (permisoComercio.canUpdate()) {
-            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Editar" (onClick)="editarComercio(c)" />
+            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Editar"
+              (onClick)="editarComercio(c)" />
             @if (!c.activo) {
             <p-button icon="pi pi-replay" severity="secondary" [text]="true" [rounded]="true" pTooltip="Reactivar"
               (onClick)="reactivarComercio(c)" />
@@ -184,7 +227,9 @@
         </tr>
       </ng-template>
       <ng-template #emptymessage>
-        <tr><td colspan="6" class="text-center p-4">Este cliente no tiene comercios.</td></tr>
+        <tr>
+          <td colspan="6" class="text-center p-4">Este cliente no tiene comercios.</td>
+        </tr>
       </ng-template>
     </p-table>
   </div>
