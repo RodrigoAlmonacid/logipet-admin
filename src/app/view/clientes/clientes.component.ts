@@ -81,7 +81,12 @@ export class ClientesComponent implements OnInit {
     this.loading.set(true);
     this.clienteService.list().subscribe({
       next: (data) => {
-        this.clientes.set(data);
+        this.clientes.set(
+          data.map(cli => ({
+            ...cli,
+            nombreCompleto: `${cli.apellido}, ${cli.nombre}`
+          }))
+        );
         this.loading.set(false);
       },
       error: (err) => {
@@ -130,9 +135,9 @@ export class ClientesComponent implements OnInit {
     const req$ = current
       ? this.clienteService.update(current.id, { nombre, apellido, email, cuit, condicionIva, telefono, activo })
       : this.clienteService.create({
-          nombre, apellido, email, cuit, condicionIva, telefono,
-          comercio: comercioDatos(this.comercioInicial),
-        });
+        nombre, apellido, email, cuit, condicionIva, telefono,
+        comercio: comercioDatos(this.comercioInicial),
+      });
 
     req$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
