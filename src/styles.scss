@@ -20,6 +20,12 @@
   --lp-danger-bg: #FEF2F2;
   --lp-danger-text: #DC2626;
   --lp-danger-border: #FECACA;
+
+  /* paleta para inicio */  
+  --logipet-celeste: #0EA5E9;
+  --logipet-verde: #10B981;
+  --logipet-rosa: #FF69B4;
+  --logipet-naranja: #F0B06B;
 }
 
 body {
@@ -51,3 +57,19 @@ body {
 .deposito-layout { min-height: 100dvh; }
 
 button, .p-button { min-height: 44px; }   /* objetivo táctil mínimo */
+
+.text-logipet-celeste {
+  color: var(--logipet-celeste);
+}
+
+.text-logipet-verde {
+  color: var(--logipet-verde);
+}
+
+.text-logipet-rosa {
+  color: var(--logipet-rosa);
+}
+
+.text-logipet-naranja {
+  color: var(--logipet-naranja);
+}
