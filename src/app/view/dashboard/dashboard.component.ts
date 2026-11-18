@@ -22,18 +22,26 @@ export class DashboardComponent implements OnInit {
   protected readonly resumen = signal<ResumenDashboard | null>(null);
   protected readonly loading = signal(false);
 
-  // Los colores salen del preset de LogiPet (escala primary), con los hex como respaldo.
-  private readonly paleta = this.leerPaleta();
+  // Paleta de colores de LogiPet.
+  private readonly paleta = [
+    '#10B981', // Verde
+    '#0EA5E9', // Celeste
+    '#FF69B4', // Rosa
+    '#F0B06B', // Naranja
+  ];
 
   protected readonly dataMarcas = computed(() => {
     const marcas = this.resumen()?.ventas?.marcas ?? [];
+
     return {
       labels: marcas.map((m) => m.nombre),
       datasets: [
         {
           data: marcas.map((m) => m.unidades),
           backgroundColor: marcas.map((m, i) =>
-            m.nombre === 'Otras' ? '#adb5bd' : this.paleta[i % this.paleta.length],
+            m.nombre === 'Otras'
+              ? '#adb5bd'
+              : this.paleta[i % this.paleta.length],
           ),
           borderColor: '#ffffff',
           borderWidth: 2,
@@ -56,14 +64,6 @@ export class DashboardComponent implements OnInit {
         this.showError(err);
       },
     });
-  }
-
-  private leerPaleta(): string[] {
-    const respaldo = ['#142438', '#2a4868', '#4a76a4', '#93afd0', '#b9cbe1'];
-    const estilos = getComputedStyle(document.documentElement);
-    return ['900', '700', '500', '300', '200'].map(
-      (tono, i) => estilos.getPropertyValue(`--p-primary-${tono}`).trim() || respaldo[i],
-    );
   }
 
   private showError(err: HttpErrorResponse): void {

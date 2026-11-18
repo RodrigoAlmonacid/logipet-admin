@@ -26,7 +26,7 @@ export class SidebarNavComponent {
   protected readonly auth = inject(AuthService);
 
   protected readonly menuItems: MenuItem[] = [
-    { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
+    { label: 'Inicio', icon: 'pi pi-home', route: '/dashboard' },
     { label: 'Empleados', icon: 'pi pi-users', route: '/empleados', permiso: [PERMISOS.EMPLEADO_VIEW] },
     { label: 'Clientes', icon: 'pi pi-briefcase', route: '/clientes', permiso: [PERMISOS.CLIENTE_VIEW] },
     { label: 'Artículos', icon: 'pi pi-box', route: '/articulos', permiso: [PERMISOS.ARTICULO_VIEW] },
