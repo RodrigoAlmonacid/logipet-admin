@@ -1,13 +1,13 @@
 <p-toast />
 
-<h2 class="m-0 mb-4">Dashboard</h2>
+<h2 class="m-0 mb-4">Inicio</h2>
 
 @if (resumen(); as r) {
   @if (r.ventas; as v) {
     <div class="grid">
       <div class="col-12 md:col-4">
         <p-card header="Mejor venta">
-          <div class="text-2xl font-bold text-primary-700">{{ v.mejorVenta.importe | currency }}</div>
+          <div class="text-2xl text-logipet-celeste">{{ v.mejorVenta.importe | currency }}</div>
           <p class="text-color-secondary text-sm m-0 mt-2">
             Pedido #{{ v.mejorVenta.id }} - {{ v.mejorVenta.comercio }}
           </p>
@@ -16,7 +16,7 @@
 
       <div class="col-12 md:col-4">
         <p-card header="Mayor facturación">
-          <div class="text-2xl font-bold text-primary-700">{{ v.topFacturacion.nombre }}</div>
+          <div class="text-2xl text-logipet-celeste">{{ v.topFacturacion.nombre }}</div>
           <p class="text-color-secondary text-sm m-0 mt-2">
             Total facturado: {{ v.topFacturacion.total | currency }}
           </p>
@@ -25,7 +25,7 @@
 
       <div class="col-12 md:col-4">
         <p-card header="Mayor variedad vendida">
-          <div class="text-2xl font-bold text-primary-700">{{ v.topVariedad.nombre }}</div>
+          <div class="text-2xl text-logipet-celeste">{{ v.topVariedad.nombre }}</div>
           <p class="text-color-secondary text-sm m-0 mt-2">
             {{ v.topVariedad.distintos }} productos distintos
           </p>
