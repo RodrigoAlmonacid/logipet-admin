@@ -97,6 +97,11 @@ export const routes: Routes = [
         data: { permissions: [PERMISOS.PEDIDO_PREPARE] },
       },
       {
+        path: 'camiones',
+        loadComponent: () => import('./view/camiones/camiones.component').then((m) => m.CamionesComponent),
+        data: { permissions: [PERMISOS.CAMION_VIEW] },
+      },
+      {
         path: 'reabastecimiento',
         loadComponent: () => import('./view/reabastecimiento/reabastecimiento.component').then((m) => m.ReabastecimientoComponent),
         data: { permissions: [PERMISOS.STOCK_VIEW]},

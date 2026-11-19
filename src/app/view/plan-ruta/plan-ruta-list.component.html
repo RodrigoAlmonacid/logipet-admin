@@ -4,7 +4,7 @@
 <div class="flex align-items-center justify-content-between mb-4">
   <h2 class="m-0">Planes de Ruta</h2>
   @if (permiso.canCreate()) {
-    <p-button label="Nuevo plan" icon="pi pi-plus" (onClick)="openCreate()" />
+  <p-button label="Nuevo plan" icon="pi pi-plus" (onClick)="openCreate()" />
   }
 </div>
 
@@ -14,6 +14,7 @@
       <th>ID</th>
       <th>Fecha</th>
       <th>Depósito</th>
+      <th>Camiones</th>
       <th>Hora límite</th>
       <th>Estado</th>
       <th>Envíos</th>
@@ -26,30 +27,18 @@
       <td>#{{ plan.id }}</td>
       <td>{{ formatDate(plan.fecha) }}</td>
       <td>{{ plan.deposito.nombre }}</td>
+      <td>{{ plan.camiones.length }}</td>
       <td>{{ formatDate(plan.horaLimite) }} 20:00</td>
       <td>
         <p-tag [value]="plan.estado" [severity]="estadoSeverity(plan.estado)" />
       </td>
       <td>{{ plan.envios.length }}</td>
       <td class="text-right">
-        <p-button
-          icon="pi pi-eye"
-          [text]="true"
-          [rounded]="true"
-          (onClick)="verDetalle(plan)"
-          pTooltip="Ver detalle"
-        />
+        <p-button icon="pi pi-eye" [text]="true" [rounded]="true" (onClick)="verDetalle(plan)" pTooltip="Ver detalle" />
         @if (canOptimize()) {
-          <p-button
-            icon="pi pi-bolt"
-            severity="success"
-            [text]="true"
-            [rounded]="true"
-            [loading]="optimizing() === plan.id"
-            [disabled]="optimizing() !== null"
-            (onClick)="optimizar(plan)"
-            pTooltip="Optimizar"
-          />
+        <p-button icon="pi pi-bolt" severity="success" [text]="true" [rounded]="true"
+          [loading]="optimizing() === plan.id" [disabled]="optimizing() !== null" (onClick)="optimizar(plan)"
+          pTooltip="Optimizar" />
         }
       </td>
     </tr>
@@ -64,57 +53,41 @@
   </ng-template>
 </p-table>
 
-<p-dialog
-  header="Nuevo plan de ruta"
-  [(visible)]="dialogVisible"
-  [modal]="true"
-  [draggable]="false"
-  [style]="{ width: '32rem' }"
->
+<p-dialog header="Nuevo plan de ruta" [(visible)]="dialogVisible" [modal]="true" [draggable]="false"
+  [style]="{ width: '32rem' }">
   <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-column gap-3">
     <div class="flex flex-column gap-2">
       <label for="fecha" class="text-sm font-medium">Fecha</label>
-      <p-datepicker
-        inputId="fecha"
-        formControlName="fecha"
-        dateFormat="dd/mm/yy"
-        [showIcon]="true"
-        appendTo="body"
-      />
+      <p-datepicker inputId="fecha" formControlName="fecha" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
       @if (form.controls.fecha.invalid && form.controls.fecha.touched) {
-        <small class="text-red-500">La fecha es obligatoria.</small>
+      <small class="text-red-500">La fecha es obligatoria.</small>
       }
     </div>
 
     <div class="flex flex-column gap-2">
       <label for="depositoId" class="text-sm font-medium">Depósito</label>
-      <p-select
-        inputId="depositoId"
-        formControlName="depositoId"
-        [options]="depositos()"
-        optionLabel="nombre"
-        optionValue="id"
-        placeholder="Seleccioná un depósito"
-        styleClass="w-full"
-        appendTo="body"
-      />
+      <p-select inputId="depositoId" formControlName="depositoId" [options]="depositos()" optionLabel="nombre"
+        optionValue="id" placeholder="Seleccioná un depósito" styleClass="w-full" appendTo="body" />
       @if (form.controls.depositoId.invalid && form.controls.depositoId.touched) {
-        <small class="text-red-500">Seleccioná un depósito.</small>
+      <small class="text-red-500">Seleccioná un depósito.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="camionIds" class="text-sm font-medium">Camiones</label>
+      <p-multiselect inputId="camionIds" formControlName="camionIds" [options]="camiones()" optionLabel="etiqueta"
+        optionValue="id" placeholder="Seleccioná los camiones" styleClass="w-full" appendTo="body" />
+      @if (form.controls.camionIds.invalid && form.controls.camionIds.touched) {
+      <small class="text-red-500">Elegí al menos un camión.</small>
       }
     </div>
 
     <div class="flex flex-column gap-2">
       <label for="horaLimite" class="text-sm font-medium">Hora límite (deadline de entregas)</label>
-      <p-datepicker
-        inputId="horaLimite"
-        formControlName="horaLimite"
-        [showTime]="true"
-        hourFormat="24"
-        [showIcon]="true"
-        appendTo="body"
-      />
+      <p-datepicker inputId="horaLimite" formControlName="horaLimite" [showTime]="true" hourFormat="24"
+        [showIcon]="true" appendTo="body" />
       @if (form.controls.horaLimite.invalid && form.controls.horaLimite.touched) {
-        <small class="text-red-500">La hora límite es obligatoria.</small>
+      <small class="text-red-500">La hora límite es obligatoria.</small>
       }
     </div>
 

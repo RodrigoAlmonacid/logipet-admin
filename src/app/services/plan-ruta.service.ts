@@ -60,13 +60,14 @@ export interface PlanRuta {
   updatedAt: string;
   deposito: Deposito;
   envios: EnvioRuta[];
+  camiones: { id: number; interno: number; marca: string }[];
 }
 
 export interface CreatePlanRutaDto {
   fecha: string;       // ISO 8601
   depositoId: number;
   horaLimite: string;  // ISO 8601
-  camionIds?: number[];
+  camionIds: number[];
 }
 
 export interface OptimizeResult {

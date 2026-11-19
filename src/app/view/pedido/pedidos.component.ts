@@ -484,7 +484,7 @@ export class PedidosComponent implements OnInit {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `presupuesto-${pedido.id}.pdf`;
+        a.download = `presupuesto-${pedido.cliente.apellido}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       },

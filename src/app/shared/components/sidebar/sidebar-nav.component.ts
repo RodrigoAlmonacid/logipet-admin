@@ -35,7 +35,8 @@ export class SidebarNavComponent {
     { label: 'Pedidos', icon: 'pi pi-shopping-bag', route: '/pedidos', permiso: PEDIDOS_ACCESO },
     { label: 'Planes de Ruta', icon: 'pi pi-map', route: '/plan-rutas', permiso: [PERMISOS.PLANRUTA_VIEW] },
     { label: 'Depósito', icon: 'pi pi-box', route: '/deposito', permiso: [PERMISOS.PEDIDO_PREPARE] },
-    { label: 'Reabastecimiento', icon: 'pi pi-truck', route: '/reabastecimiento', permiso: [PERMISOS.STOCK_VIEW] },
+    { label: 'Camiones', icon: 'pi pi-truck', route: '/camiones', permiso: [PERMISOS.CAMION_VIEW] },
+    { label: 'Reabastecimiento', icon: 'pi pi-sync', route: '/reabastecimiento', permiso: [PERMISOS.STOCK_VIEW] },
   ];
 
   protected readonly menuVisible = computed(() =>

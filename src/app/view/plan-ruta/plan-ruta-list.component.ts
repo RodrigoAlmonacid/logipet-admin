@@ -16,6 +16,8 @@ import { Deposito, DepositoCatalogoService } from '../../services/deposito-catal
 import { PlanRuta, PlanRutaService } from '../../services/plan-ruta.service';
 import { permissionsFor } from '../../helpers/permission-for';
 import { PERMISOS } from '../../helpers/permisos.constants';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { Camion, CamionesService } from '../../services/camiones.service';
 
 // ============================================================
 // PlanRutaListComponent — lista todos los planes de ruta.
@@ -33,7 +35,7 @@ import { PERMISOS } from '../../helpers/permisos.constants';
   selector: 'app-plan-ruta-list',
   imports: [
     ReactiveFormsModule, TableModule, ButtonModule, DialogModule,
-    DatePickerModule, SelectModule, TagModule, ToastModule, ConfirmDialogModule,
+    DatePickerModule, SelectModule, TagModule, ToastModule, ConfirmDialogModule, MultiSelectModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './plan-ruta-list.component.html',
@@ -47,6 +49,8 @@ export class PlanRutaListComponent implements OnInit {
   private readonly messages = inject(MessageService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly router = inject(Router);
+  private readonly camionesService = inject(CamionesService);
+  protected readonly camiones = signal<(Camion & { etiqueta: string })[]>([]);
 
   protected readonly planes = signal<PlanRuta[]>([]);
   protected readonly depositos = signal<Deposito[]>([]);
@@ -65,12 +69,20 @@ export class PlanRutaListComponent implements OnInit {
     fecha: [new Date(), Validators.required],
     depositoId: [0, [Validators.required, Validators.min(1)]],
     horaLimite: [this.defaultHoraLimite(), Validators.required],
+    camionIds: [[] as number[], Validators.required], // required rechaza el array vacío
   });
 
   ngOnInit(): void {
     this.load();
     this.depositoCatalogo.findActivos().subscribe({
       next: (deps) => this.depositos.set(deps),
+      error: (err) => this.showError(err),
+    });
+    this.camionesService.listar().subscribe({
+      next: (lista) => this.camiones.set(
+        lista.filter((c) => c.disponible)
+          .map((c) => ({ ...c, etiqueta: `Interno ${c.interno} · ${c.marca}` })),
+      ),
       error: (err) => this.showError(err),
     });
   }
@@ -95,6 +107,7 @@ export class PlanRutaListComponent implements OnInit {
       fecha: new Date(),
       depositoId: 0,
       horaLimite: this.defaultHoraLimite(),
+      camionIds: [],
     });
     this.dialogVisible.set(true);
   }
@@ -106,13 +119,14 @@ export class PlanRutaListComponent implements OnInit {
       return;
     }
 
-    const { fecha, depositoId, horaLimite } = this.form.getRawValue();
+    const { fecha, depositoId, horaLimite, camionIds } = this.form.getRawValue();
     this.saving.set(true);
 
     this.planRutaService.create({
       fecha: this.toIso(fecha),
       depositoId,
       horaLimite: this.toIso(horaLimite),
+      camionIds,
     }).subscribe({
       next: (plan) => {
         this.saving.set(false);

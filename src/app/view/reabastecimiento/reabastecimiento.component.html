@@ -62,7 +62,10 @@
     styleClass="p-datatable-sm">
     <ng-template #header>
       <tr>
-        <th>Producto</th>
+        <th pSortableColumn="nombre">
+        Producto
+        <p-columnFilter field="nombre" type="text" display="menu" />
+      </th>
         <th class="text-center">Estado</th>
         <th class="text-center">Demanda</th>
         <th class="text-right">Stock</th>
