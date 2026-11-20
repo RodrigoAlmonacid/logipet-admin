@@ -30,9 +30,10 @@
     @for (l of lineasOrdenadas(); track l.articuloId) {
     <div class="border-1 surface-border border-round p-3 flex align-items-center gap-3"
       [class.surface-100]="l.verificado">
-      <i [class]="l.verificado ? 'pi pi-check-circle text-green-500 text-2xl' : 'pi pi-circle text-color-secondary text-2xl'"></i>
+      <i
+        [class]="l.verificado ? 'pi pi-check-circle text-green-500 text-2xl' : 'pi pi-circle text-color-secondary text-2xl'"></i>
       <div class="flex-1 min-w-0">
-        <div class="font-medium">{{ l.nombre }}</div>
+        <div class="font-medium">{{ l.nombre }} ({{ l.marcaNombre }})</div>
         <small class="text-color-secondary">{{ l.presentacion }}</small>
         @if (l.cantidadOriginal !== null) {
         <div class="text-orange-500 text-sm">Pedido: {{ l.cantidadOriginal }} · {{ l.justificacionAjuste }}</div>
@@ -98,9 +99,9 @@
       <label class="text-sm font-medium">Justificación del faltante</label>
       <textarea pTextarea [formControl]="justificacionCtrl" rows="3" class="w-full"
         placeholder="Ej.: sin stock en góndola, bolsa dañada…"></textarea>
-      @if (justificacionCtrl.touched && justificacionCtrl.value.trim().length < 5) {
-      <small class="text-red-500">Escribí al menos 5 caracteres.</small>
-      }
+      @if (justificacionCtrl.touched && justificacionCtrl.value.trim().length < 5) { <small class="text-red-500">Escribí
+        al menos 5 caracteres.</small>
+        }
     </div>
     }
 

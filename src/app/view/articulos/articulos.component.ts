@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -23,7 +23,7 @@ import { permissionsFor } from '../../helpers/permission-for';
   imports: [
     ReactiveFormsModule, FormsModule, TableModule, ButtonModule, DialogModule,
     InputTextModule, InputNumberModule, SelectModule, TextareaModule,
-    ToastModule, ConfirmDialogModule, CurrencyPipe,
+    ToastModule, ConfirmDialogModule, CurrencyPipe, DecimalPipe
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './articulos.component.html',
@@ -57,6 +57,7 @@ export class ArticulosComponent implements OnInit {
     codigo: ['', Validators.required],
     nombre: ['', Validators.required],
     presentacion: ['', Validators.required],
+    pesoGramos: [null as number | null, Validators.min(0)],
     descripcion: [''],
     precio: [0, [Validators.required, Validators.min(0)]],
     stock: [0, [Validators.required, Validators.min(0)]],
@@ -99,7 +100,7 @@ export class ArticulosComponent implements OnInit {
     this.editing.set(null);
     this.form.reset({
       codigo: '', nombre: '', presentacion: '', descripcion: '',
-      precio: 0, stock: 0, marcaId: null, alicuotaIvaId: null
+      precio: 0, stock: 0, marcaId: null, alicuotaIvaId: null, pesoGramos: null,
     });
     this.dialogVisible.set(true);
   }
@@ -112,6 +113,7 @@ export class ArticulosComponent implements OnInit {
       nombre: art.nombre,
       presentacion: art.presentacion,
       descripcion: art.descripcion ?? '',
+      pesoGramos: art.pesoGramos ?? null,
       precio: art.precio,
       stock: art.stock,
       marcaId: art.marcaId,

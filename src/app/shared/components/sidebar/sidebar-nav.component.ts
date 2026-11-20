@@ -27,14 +27,15 @@ export class SidebarNavComponent {
 
   protected readonly menuItems: MenuItem[] = [
     { label: 'Inicio', icon: 'pi pi-home', route: '/dashboard' },
+    { label: 'Roles', icon: 'pi pi-shield', route: '/roles', permiso: [PERMISOS.ROL_MANAGE] },
     { label: 'Empleados', icon: 'pi pi-users', route: '/empleados', permiso: [PERMISOS.EMPLEADO_VIEW] },
     { label: 'Clientes', icon: 'pi pi-briefcase', route: '/clientes', permiso: [PERMISOS.CLIENTE_VIEW] },
-    { label: 'Artículos', icon: 'pi pi-box', route: '/articulos', permiso: [PERMISOS.ARTICULO_VIEW] },
     { label: 'Marcas', icon: 'pi pi-tags', route: '/marcas', permiso: [PERMISOS.MARCA_VIEW] },
-    { label: 'Roles', icon: 'pi pi-shield', route: '/roles', permiso: [PERMISOS.ROL_MANAGE] },
+    { label: 'Artículos', icon: 'pi pi-box', route: '/articulos', permiso: [PERMISOS.ARTICULO_VIEW] },
     { label: 'Pedidos', icon: 'pi pi-shopping-bag', route: '/pedidos', permiso: PEDIDOS_ACCESO },
-    { label: 'Planes de Ruta', icon: 'pi pi-map', route: '/plan-rutas', permiso: [PERMISOS.PLANRUTA_VIEW] },
     { label: 'Depósito', icon: 'pi pi-box', route: '/deposito', permiso: [PERMISOS.PEDIDO_PREPARE] },
+    { label: 'Planes de Ruta', icon: 'pi pi-map', route: '/plan-rutas', permiso: [PERMISOS.PLANRUTA_VIEW] },
+    { label: 'Mi ruta', icon: 'pi pi-map-marker', route: '/mi-ruta', permiso: [PERMISOS.ENVIO_VIEW_OWN] },
     { label: 'Camiones', icon: 'pi pi-truck', route: '/camiones', permiso: [PERMISOS.CAMION_VIEW] },
     { label: 'Reabastecimiento', icon: 'pi pi-sync', route: '/reabastecimiento', permiso: [PERMISOS.STOCK_VIEW] },
   ];

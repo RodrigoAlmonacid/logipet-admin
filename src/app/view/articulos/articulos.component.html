@@ -12,47 +12,93 @@
   <ng-template #header>
     <tr>
       <th pSortableColumn="codigo">
-        Código
-        <p-sortIcon field="codigo" />
-        <p-columnFilter field="codigo" type="text" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Código</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="codigo" />
+            <p-columnFilter field="codigo" type="text" display="menu" />
+          </div>
+        </div>
       </th>
 
       <th pSortableColumn="nombre">
-        Nombre
-        <p-sortIcon field="nombre" />
-        <p-columnFilter field="nombre" type="text" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Nombre</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="nombre" />
+            <p-columnFilter field="nombre" type="text" display="menu" />
+          </div>
+        </div>
       </th>
 
       <th pSortableColumn="marca.nombre">
-        Marca
-        <p-sortIcon field="marca.nombre" />
-        <p-columnFilter field="marca.nombre" type="text" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Marca</span>
+          <div class="flex align-items-center gap-2">
+
+            <p-sortIcon field="marca.nombre" />
+            <p-columnFilter field="marca.nombre" type="text" display="menu" />
+          </div>
+        </div>
+
       </th>
 
       <th pSortableColumn="descripcion">
-        Descripción
-        <p-sortIcon field="descripcion" />
-        <p-columnFilter field="descripcion" type="text" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Descripción</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="descripcion" />
+            <p-columnFilter field="descripcion" type="text" display="menu" />
+          </div>
+        </div>
       </th>
 
       <th pSortableColumn="presentacion">
-        Presentación
-        <p-sortIcon field="presentacion" />
-        <p-columnFilter field="presentacion" type="text" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Presentación</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="presentacion" />
+            <p-columnFilter field="presentacion" type="text" display="menu" />
+          </div>
+        </div>
+      </th>
+
+      <th pSortableColumn="pesoGramos">
+        <div class="flex flex-column gap-2">
+          <span>Peso (gramos)</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="pesoGramos" />
+            <p-columnFilter field="pesoGramos" type="numeric" display="menu" />
+          </div>
+        </div>
       </th>
 
       <th pSortableColumn="precio">
-        Precio
-        <p-sortIcon field="precio" />
-        <p-columnFilter field="precio" type="numeric" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Precio</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="precio" />
+            <p-columnFilter field="precio" type="numeric" display="menu" />
+          </div>
+        </div>
       </th>
 
-      <th>IVA (alícuota)</th>
+      <th>
+        <div class="flex flex-column gap-2">
+          <div class="flex align-items-start gap-2">
+          <span>IVA (alícuota)</span>
+        </div>
+        </div>
+      </th>
 
       <th pSortableColumn="stock">
-        Stock
-        <p-sortIcon field="stock" />
-        <p-columnFilter field="stock" type="numeric" display="menu" />
+        <div class="flex flex-column gap-2">
+          <span>Stock</span>
+          <div class="flex align-items-center gap-2">
+            <p-sortIcon field="stock" />
+            <p-columnFilter field="stock" type="numeric" display="menu" />
+          </div>
+        </div>
       </th>
 
       @if (permisoArticulo.hasRowActions()) {
@@ -68,6 +114,7 @@
       <td>{{ articulo.marca?.nombre ?? '—' }}</td>
       <td>{{ articulo.descripcion }}</td>
       <td>{{ articulo.presentacion }}</td>
+      <td>{{ articulo.pesoGramos | number:'1.0-2' }} g</td>
       <td>{{ articulo.precio | currency }}</td>
       <td>
         {{ articulo.alicuotaIva?.porcentaje ?? '—' }} %
@@ -146,6 +193,14 @@
       <input pInputText id="presentacion" formControlName="presentacion" class="w-full" />
       @if (form.controls.presentacion.invalid && form.controls.presentacion.touched) {
       <small class="text-red-500">La presentación es obligatoria.</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="pesoGramos" class="text-sm font-medium">Peso (gramos)</label>
+      <input pInputText type="number" id="pesoGramos" formControlName="pesoGramos" class="w-full" />
+      @if (form.controls.pesoGramos.invalid && form.controls.pesoGramos.touched) {
+      <small class="text-red-500">El peso es necesario para calcular los envíos.</small>
       }
     </div>
 

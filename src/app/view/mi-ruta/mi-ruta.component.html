@@ -1,0 +1,98 @@
+<p-toast position="top-center" />
+<p-confirmdialog [style]="{ width: '90vw', 'max-width': '24rem' }" />
+
+<div class="flex align-items-center justify-content-between mb-3">
+  <h2 class="m-0">Mi ruta</h2>
+  <p-button icon="pi pi-refresh" [text]="true" [rounded]="true" [loading]="loading()" (onClick)="cargar()" ariaLabel="Actualizar" />
+</div>
+
+@for (e of envios(); track e.id) {
+  <div class="surface-card border-round shadow-1 p-3 mb-3">
+    <div class="font-semibold text-lg"><i class="pi pi-truck mr-2"></i>Camión {{ e.camion.interno }} · {{ e.camion.marca }}</div>
+    <div class="text-sm text-color-secondary">
+      Salís de {{ e.planRuta.deposito.nombre }}
+      @if (e.empleados.length > 1) { · Equipo: }
+      @for (m of e.empleados; track m.id; let last = $last) { @if (e.empleados.length > 1) { {{ m.nombre }} {{ m.apellido }}{{ last ? '' : ', ' }} } }
+    </div>
+    <div class="mt-2 font-medium">{{ resumen(e).hechos }} de {{ resumen(e).total }} paradas resueltas</div>
+    <div class="surface-200 border-round mt-1" style="height: 6px">
+      <div class="bg-primary border-round" style="height: 6px" [style.width.%]="(resumen(e).hechos / resumen(e).total) * 100"></div>
+    </div>
+  </div>
+
+  @for (p of e.pedidos; track p.id) {
+    <div class="surface-card border-round shadow-1 p-3 mb-3"
+      [class.border-2]="proxima(e) === p.id" [class.border-primary]="proxima(e) === p.id"
+      [style.opacity]="enCalle(p) ? 1 : 0.6">
+      <div class="flex align-items-start gap-2">
+        <span class="flex align-items-center justify-content-center border-circle bg-primary text-white font-bold flex-shrink-0"
+          style="width: 2rem; height: 2rem">{{ p.ordenRuta }}</span>
+        <div class="flex-1">
+          <div class="font-semibold">{{ p.comercio.nombre }}</div>
+          <div class="text-sm text-color-secondary">{{ p.comercio.direccion }}</div>
+        </div>
+        @if (!enCalle(p)) {
+          <p-tag [value]="etiquetaEstado(p).label" [severity]="etiquetaEstado(p).severity" />
+        } @else if (p.llegadaEstimada) {
+          <small class="text-color-secondary">~{{ formatTime(p.llegadaEstimada) }}</small>
+        }
+      </div>
+
+      <div class="text-sm mt-2">
+        <div class="text-color-secondary mb-1">{{ formatKg(p.pesoGramos) }}</div>
+        @for (a of p.articulos; track $index) {
+          <div>{{ a.cantidad }} × {{ a.articulo.nombre }} @if (a.articulo.presentacion) { <span class="text-color-secondary">({{ a.articulo.presentacion }})</span> }</div>
+        }
+      </div>
+
+      @if (enCalle(p)) {
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <a [href]="mapsUrl(p)" target="_blank" rel="noopener" class="no-underline flex-1">
+            <p-button label="Cómo llegar" icon="pi pi-map-marker" severity="secondary" [outlined]="true" styleClass="w-full" />
+          </a>
+          @if (p.comercio.telefono) {
+            <a [href]="'tel:' + p.comercio.telefono" class="no-underline flex-1">
+              <p-button label="Llamar" icon="pi pi-phone" severity="secondary" [outlined]="true" styleClass="w-full" />
+            </a>
+          }
+        </div>
+        <div class="flex gap-2 mt-2">
+          <p-button label="Entregado" icon="pi pi-check" severity="success" styleClass="w-full" class="flex-1"
+            [loading]="trabajando() === p.id" (onClick)="entregar(p)" />
+          <p-button label="No se pudo" icon="pi pi-times" severity="danger" [outlined]="true" styleClass="w-full" class="flex-1"
+            [disabled]="trabajando() === p.id" (onClick)="abrirNoEntregado(p)" />
+        </div>
+      }
+    </div>
+  }
+} @empty {
+  @if (!loading()) {
+    <div class="text-center p-5 text-color-secondary">
+      <i class="pi pi-inbox text-4xl mb-2"></i>
+      <div>No tenés hojas de ruta en reparto por ahora.</div>
+    </div>
+  }
+}
+
+<p-dialog header="No se pudo entregar" [visible]="dialogVisible()" (visibleChange)="cerrar()" [modal]="true"
+  [draggable]="false" [style]="{ width: '92vw', 'max-width': '26rem' }">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Motivo</label>
+      <p-select [formControl]="motivoCtrl" [options]="motivos" optionLabel="label" optionValue="value"
+        placeholder="Elegí un motivo" styleClass="w-full" appendTo="body" />
+      @if (motivoCtrl.invalid && motivoCtrl.touched) { <small class="text-red-500">Elegí un motivo.</small> }
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="text-sm font-medium">Observación (opcional)</label>
+      <textarea pTextarea [formControl]="obsCtrl" rows="3" maxlength="300" class="w-full"></textarea>
+    </div>
+    <small class="text-color-secondary">
+      Cliente ausente: el pedido vuelve a la cola y sale en la próxima hoja de ruta. Los otros motivos cancelan el pedido.
+    </small>
+    <div class="flex justify-content-end gap-2">
+      <p-button label="Volver" severity="secondary" [text]="true" (onClick)="cerrar()" />
+      <p-button label="Confirmar" severity="danger" [loading]="trabajando() !== null" (onClick)="confirmarNoEntregado()" />
+    </div>
+  </div>
+</p-dialog>

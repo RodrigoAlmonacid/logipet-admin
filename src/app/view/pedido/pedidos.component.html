@@ -159,25 +159,31 @@
       <div [formGroup]="item" class="flex flex-column gap-2 p-2 border-1 surface-border border-round">
         <div class="flex justify-content-between align-items-start">
           <p-select formControlName="articuloId" [options]="articulosOpciones()" optionLabel="etiqueta" optionValue="id"
-            [filter]="true" filterBy="nombre,codigo,marca.nombre,presentacion" placeholder="Producto"
-            styleClass="w-full" (onChange)="recalcular()">
+            [filter]="true" filterBy="busqueda" placeholder="Producto" styleClass="w-full" (onChange)="recalcular()">
             <ng-template #item let-a>
               <div class="flex flex-column">
                 <span>{{ a.nombre }} ({{ a.presentacion }})</span>
-                <small class="text-color-secondary">{{ a.marca?.nombre ?? 'Sin marca' }} · {{ a.codigo }}</small>
+                <small class="text-color-secondary">
+                  {{ a.marca?.nombre ?? 'Sin marca' }} · {{ a.codigo }}
+                </small>
               </div>
             </ng-template>
           </p-select>
+          @if (item.controls.articuloId.invalid && item.controls.articuloId.touched) {
+          <small class="p-error text-red-500">
+            Seleccioná un producto para esta línea.
+          </small>
+          }
           <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="quitarItem($index)" />
         </div>
 
         <div class="flex flex-column sm:flex-row gap-2">
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Cantidad</label>
-            <p-inputnumber formControlName="cantidad" [min]="1" [max]="stockDe($index) ?? undefined"
-              [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
-              decrementButtonIcon="pi pi-minus" styleClass="w-full" inputStyleClass="w-full text-center"
-              (onInput)="recalcular()" />
+            <p-inputnumber formControlName="cantidad" [disabled]="!item.controls.articuloId.value" [min]="1"
+              [max]="stockDe($index) ?? undefined" [showButtons]="true" buttonLayout="horizontal"
+              incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" styleClass="w-full"
+              inputStyleClass="w-full text-center" (onInput)="recalcular()" />
           </div>
           <div class="flex flex-column gap-1 flex-1">
             <label class="text-xs text-color-secondary">Stock disponible</label>
@@ -284,7 +290,7 @@
       </ng-template>
       <ng-template #body let-l>
         <tr>
-          <td>{{ l.nombre }}</td>
+          <td>{{ l.nombre }} ({{ l.marcaNombre }})</td>
           <td class="text-right">{{ l.cantidad }}</td>
           @if (estadoActual(p) === 'pendiente') {
           <td class="text-right" [class.text-red-500]="(stockPendiente(p, l.articuloId) ?? 0) < l.cantidad">
@@ -297,6 +303,16 @@
           <td class="text-right">{{ l.importeIva | currency }}</td>
           <td class="text-right font-semibold">{{ l.importeFinal | currency }}</td>
         </tr>
+        @if (l.justificacionAjuste) {
+        <tr>
+          <td colspan="8" class="pt-0">
+            <small class="text-color-secondary">
+              <strong>Justificación del ajuste:</strong>
+              {{ l.justificacionAjuste }} (cantidad solicitada: {{ l.cantidadOriginal }})
+            </small>
+          </td>
+        </tr>
+        }
       </ng-template>
     </p-table>
 

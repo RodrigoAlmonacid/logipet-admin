@@ -32,7 +32,7 @@ export interface Pedido {
   importe: number;
   createdAt: string;
   cliente: Omit<Cliente, 'comercios'>;
-  comercio: Comercio; 
+  comercio: Comercio;
   empleado: EmpleadoResumen;
   articulos: DetallePedido[];
   historialEstados: EstadoPedido[];
@@ -40,7 +40,7 @@ export interface Pedido {
   lineas: LineaCalculada[];
   totales: Totales;
   pesoGramos: number;
-pesoIncompleto: boolean;
+  pesoIncompleto: boolean;
 }
 
 export interface LineaCalculada {
