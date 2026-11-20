@@ -14,6 +14,8 @@ import { ToastModule } from 'primeng/toast';
 import { finalize, timer } from 'rxjs';
 import { DepositoService, LineaDeposito, PedidoDeposito } from '../../services/deposito.service';
 import { EscanerComponent } from '../../shared/components/escaner/escaner.component';
+import { CurrencyPipe, DatePipe, JsonPipe } from '@angular/common';
+
 
 const nombreEstado = (p: PedidoDeposito) =>
   p.historialEstados.find((h) => h.fechaFin === null)?.estado.nombre;
@@ -25,7 +27,7 @@ const normalizar = (s: string) => s.trim().replace(/^0+/, '');
   selector: 'app-deposito',
   imports: [
     ReactiveFormsModule, ButtonModule, ConfirmDialogModule, DialogModule, InputNumberModule,
-    InputTextModule, TagModule, TextareaModule, ToastModule, EscanerComponent,
+    InputTextModule, TagModule, TextareaModule, ToastModule, EscanerComponent, JsonPipe
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './deposito.component.html',

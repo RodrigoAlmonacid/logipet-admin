@@ -11,6 +11,7 @@ export interface LineaDeposito {
   cantidadOriginal: number | null;
   justificacionAjuste: string | null;
   verificado: boolean;
+  marcaNombre: string | null;
 }
 
 export interface PedidoDeposito {

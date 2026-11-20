@@ -33,6 +33,7 @@ export interface CreateArticulo {
   nombre: string;
   presentacion: string;
   descripcion?: string | null;
+  pesoGramos?: number | null;
   precio: number;
   stock: number;
   marcaId?: number | null;

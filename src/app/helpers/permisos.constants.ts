@@ -32,20 +32,23 @@ export const PERMISOS = {
     PEDIDO_VIEW_ALL: 'pedido:view_all',
     PEDIDO_PREPARE: 'pedido:prepare',
     PEDIDO_ROUTE: 'pedido:route',
-    // STOCK_VIEW: existía previamente en el código (app.routes.ts, sidebar-nav)
-    // y lo estamos preservando para no romper el build del frontend.
     STOCK_VIEW: 'stock:view',
-    // BATCH 1 ADDITION: módulo de depósitos
     DEPOSITO_CREATE: 'deposito:create',
     DEPOSITO_UPDATE: 'deposito:update',
     DEPOSITO_DELETE: 'deposito:delete',
     DEPOSITO_VIEW: 'deposito:view',
-    // BATCH 1 ADDITION: módulo de plan de rutas
     PLANRUTA_CREATE: 'planruta:create',
     PLANRUTA_UPDATE: 'planruta:update',
     PLANRUTA_DELETE: 'planruta:delete',
     PLANRUTA_VIEW: 'planruta:view',
     PLANRUTA_OPTIMIZE: 'planruta:optimize',
+    CAMION_VIEW: 'camion:view',
+    CAMION_CREATE: 'camion:create',
+    CAMION_UPDATE: 'camion:update',
+    CAMION_DELETE: 'camion:delete',
+    PLANRUTA_DISPATCH: 'planruta:dispatch',   // ruteo: asigna chofer/ayudante y despacha
+    PEDIDO_DELIVER: 'pedido:deliver',         // chofer/ayudante: entregado / no entregado
+    ENVIO_VIEW_OWN: 'envio:view_own',         // chofer/ayudante: ver SU hoja de ruta
 } as const;
 
 export type PermisoCodigo = (typeof PERMISOS)[keyof typeof PERMISOS];

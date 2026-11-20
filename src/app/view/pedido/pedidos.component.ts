@@ -13,7 +13,7 @@ import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../services/auth.service';
 import { Articulo, ArticuloService } from '../../services/articulo.service';
 import { Cliente, ClienteService } from '../../services/cliente.service';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, JsonPipe } from '@angular/common';
 import {
   Pedido, ItemPedido, PedidoService, estadoActual, puedeCancelar, puedeConfirmar, puedeEditar,
   esBorrador,
@@ -85,7 +85,7 @@ const PESTANAS: { vista: Vista; label: string; permisos: string[] }[] = [
   imports: [
     ReactiveFormsModule, TableModule, ButtonModule, DialogModule, CurrencyPipe, DatePipe,
     SelectModule, InputNumberModule, TagModule, ToastModule, ConfirmDialogModule,
-    TabsModule, TooltipModule, TextareaModule, ComercioDialogComponent,
+    TabsModule, TooltipModule, TextareaModule, ComercioDialogComponent, JsonPipe
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './pedidos.component.html',
@@ -183,7 +183,13 @@ export class PedidosComponent implements OnInit {
     this.articulos().map((a) => ({
       ...a,
       etiqueta: `${a.nombre} (${a.presentacion})`,
-    })),
+      busqueda: [
+        a.nombre,
+        a.codigo,
+        a.marca?.nombre,
+        a.presentacion
+      ].filter(Boolean).join(' ')
+    }))
   );
 
   ngOnInit(): void {
@@ -484,7 +490,7 @@ export class PedidosComponent implements OnInit {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `presupuesto-${pedido.id}.pdf`;
+        a.download = `presupuesto-${pedido.cliente.apellido}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       },

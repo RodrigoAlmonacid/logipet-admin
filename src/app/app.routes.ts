@@ -92,9 +92,20 @@ export const routes: Routes = [
         data: { permissions: [PERMISOS.PLANRUTA_VIEW] },
       },
       {
+        path: 'mi-ruta',
+        loadComponent: () => import('./view/mi-ruta/mi-ruta.component').then((m) => m.MiRutaComponent),
+        canActivate: [permissionGuard],
+        data: { permissions: [PERMISOS.ENVIO_VIEW_OWN] },
+      },
+      {
         path: 'deposito',
         loadComponent: () => import('./view/deposito/deposito.component').then((m) => m.DepositoComponent),
         data: { permissions: [PERMISOS.PEDIDO_PREPARE] },
+      },
+      {
+        path: 'camiones',
+        loadComponent: () => import('./view/camiones/camiones.component').then((m) => m.CamionesComponent),
+        data: { permissions: [PERMISOS.CAMION_VIEW] },
       },
       {
         path: 'reabastecimiento',
