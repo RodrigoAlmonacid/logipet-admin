@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from './../../environments/environment';
 import { Deposito } from './deposito-catalogo.service';
+import type { FeatureCollection } from 'geojson';
 
 // ============================================================
 // PlanRutaService (Angular) — HttpClient wrapper para /plan-rutas.
@@ -54,7 +55,7 @@ export interface EnvioRuta {
   camionId: number;
   camion?: CamionRuta;
   empleados?: EmpleadoMini[];
-  rutaOptima?: GeoJSON.FeatureCollection;
+  rutaOptima?: FeatureCollection;
   distanciaMetros: number | null;
   duracionSegundos: number | null;
   optimizadoAt: string | null;
@@ -78,7 +79,7 @@ export interface PlanRuta {
 
 export interface CreatePlanRutaDto {
   fecha: string;       // ISO 8601
-  depositoId: number;
+  depositoId?: number; // opcional: el backend usa el único depósito activo
   horaLimite: string;  // ISO 8601
   camionIds: number[];
 }

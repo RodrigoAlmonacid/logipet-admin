@@ -13,7 +13,7 @@ import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../services/auth.service';
 import { Articulo, ArticuloService } from '../../services/articulo.service';
 import { Cliente, ClienteService } from '../../services/cliente.service';
-import { CurrencyPipe, DatePipe, JsonPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import {
   Pedido, ItemPedido, PedidoService, estadoActual, puedeCancelar, puedeConfirmar, puedeEditar,
   esBorrador,
@@ -85,7 +85,7 @@ const PESTANAS: { vista: Vista; label: string; permisos: string[] }[] = [
   imports: [
     ReactiveFormsModule, TableModule, ButtonModule, DialogModule, CurrencyPipe, DatePipe,
     SelectModule, InputNumberModule, TagModule, ToastModule, ConfirmDialogModule,
-    TabsModule, TooltipModule, TextareaModule, ComercioDialogComponent, JsonPipe
+    TabsModule, TooltipModule, TextareaModule, ComercioDialogComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './pedidos.component.html',
