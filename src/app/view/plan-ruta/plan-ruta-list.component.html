@@ -37,7 +37,6 @@
   <ng-template #header>
     <tr>
       <th>Entrega</th>
-      <th>Depósito</th>
       <th>Camiones</th>
       <th>Pedidos</th>
       <th>Estado</th>
@@ -51,7 +50,6 @@
         <div class="font-medium">{{ formatDate(plan.fecha) }}</div>
         <small class="text-color-secondary">Hasta las {{ formatTime(plan.horaLimite) }} hs · plan #{{ plan.id }}</small>
       </td>
-      <td>{{ plan.deposito.nombre }}</td>
       <td>{{ plan.camiones.length }}</td>
       <td>{{ totalPedidos(plan) }}</td>
       <td>
@@ -72,7 +70,7 @@
 
   <ng-template #emptymessage>
     <tr>
-      <td colspan="6" class="text-center p-4">
+      <td colspan="5" class="text-center p-4">
         Todavía no hay hojas de ruta. Creá la primera con "Nueva hoja de ruta".
       </td>
     </tr>
@@ -91,16 +89,7 @@
     </div>
 
     <div class="flex flex-column gap-2">
-      <label for="depositoId" class="text-sm font-medium">2. Depósito de salida</label>
-      <p-select inputId="depositoId" formControlName="depositoId" [options]="depositos()" optionLabel="nombre"
-        optionValue="id" placeholder="Seleccioná un depósito" styleClass="w-full" appendTo="body" />
-      @if (form.controls.depositoId.invalid && form.controls.depositoId.touched) {
-        <small class="text-red-500">Seleccioná un depósito.</small>
-      }
-    </div>
-
-    <div class="flex flex-column gap-2">
-      <label for="camionIds" class="text-sm font-medium">3. Camiones disponibles</label>
+      <label for="camionIds" class="text-sm font-medium">2. Camiones disponibles</label>
       <p-multiselect inputId="camionIds" formControlName="camionIds" [options]="camiones()" optionLabel="etiqueta"
         optionValue="id" placeholder="Elegí los camiones que salen" styleClass="w-full" appendTo="body"
         [showToggleAll]="false" display="chip" />
@@ -124,7 +113,7 @@
     </div>
 
     <div class="flex flex-column gap-2">
-      <label for="horaLimite" class="text-sm font-medium">4. Hora límite de entregas</label>
+      <label for="horaLimite" class="text-sm font-medium">3. Hora límite de entregas</label>
       <p-datepicker inputId="horaLimite" formControlName="horaLimite" [timeOnly]="true" hourFormat="24"
         [showIcon]="true" icon="pi pi-clock" appendTo="body" />
       <small class="text-color-secondary">Ningún camión tendrá paradas después de esta hora.</small>

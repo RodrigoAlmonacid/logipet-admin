@@ -14,7 +14,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { Camion, CamionesService } from '../../services/camiones.service';
-import { Deposito, DepositoCatalogoService } from '../../services/deposito-catalogo.service';
 import { ColaRuteo, PlanRuta, PlanRutaService } from '../../services/plan-ruta.service';
 import { permissionsFor } from '../../helpers/permission-for';
 import { ESTADO_PLAN, etiquetaFecha, fechaLocalIso, formatDate, formatKg, formatTime, mensajeError, pad2 } from '../../helpers/plan-ruta-ui';
@@ -40,7 +39,6 @@ import { ESTADO_PLAN, etiquetaFecha, fechaLocalIso, formatDate, formatKg, format
 export class PlanRutaListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly planRutaService = inject(PlanRutaService);
-  private readonly depositoCatalogo = inject(DepositoCatalogoService);
   private readonly camionesService = inject(CamionesService);
   private readonly messages = inject(MessageService);
   private readonly confirmation = inject(ConfirmationService);
@@ -49,7 +47,6 @@ export class PlanRutaListComponent implements OnInit {
   protected readonly permiso = permissionsFor('planruta');
 
   protected readonly planes = signal<PlanRuta[]>([]);
-  protected readonly depositos = signal<Deposito[]>([]);
   protected readonly camiones = signal<(Camion & { etiqueta: string })[]>([]);
   protected readonly fechas = signal<{ value: string; label: string }[]>([]);
   protected readonly cola = signal<ColaRuteo | null>(null);
@@ -59,7 +56,6 @@ export class PlanRutaListComponent implements OnInit {
 
   protected readonly form = this.fb.nonNullable.group({
     fecha: ['', Validators.required],
-    depositoId: [0, [Validators.required, Validators.min(1)]],
     camionIds: [[] as number[], [Validators.required, Validators.minLength(1)]],
     horaLimite: [this.horaPorDefecto(), Validators.required],
   });
@@ -81,10 +77,6 @@ export class PlanRutaListComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.depositoCatalogo.findActivos().subscribe({
-      next: (deps) => this.depositos.set(deps),
-      error: (err) => this.showError(err),
-    });
   }
 
   protected load(): void {
@@ -100,7 +92,7 @@ export class PlanRutaListComponent implements OnInit {
 
   protected openCreate(): void {
     if (!this.permiso.canCreate()) return;
-    this.form.reset({ fecha: '', depositoId: 0, camionIds: [], horaLimite: this.horaPorDefecto() });
+    this.form.reset({ fecha: '', camionIds: [], horaLimite: this.horaPorDefecto() });
     this.planRutaService.fechasDisponibles().subscribe({
       next: (fs) => {
         this.fechas.set(fs.map((f) => ({ value: f, label: etiquetaFecha(f) })));
@@ -118,8 +110,6 @@ export class PlanRutaListComponent implements OnInit {
         ),
       error: (err) => this.showError(err),
     });
-    // Un solo depósito activo: no hace falta que el usuario lo elija.
-    if (this.depositos().length === 1) this.form.controls.depositoId.setValue(this.depositos()[0].id);
     this.planRutaService.cola().subscribe({ next: (c) => this.cola.set(c) });
     this.dialogVisible.set(true);
   }
@@ -128,11 +118,10 @@ export class PlanRutaListComponent implements OnInit {
     if (!this.permiso.canCreate()) return;
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
 
-    const { fecha, depositoId, camionIds, horaLimite } = this.form.getRawValue();
+    const { fecha, camionIds, horaLimite } = this.form.getRawValue();
     this.saving.set(true);
     this.planRutaService.create({
       fecha: fechaLocalIso(fecha),
-      depositoId,
       camionIds,
       horaLimite: fechaLocalIso(fecha, `${pad2(new Date(horaLimite).getHours())}:${pad2(new Date(horaLimite).getMinutes())}`),
     }).subscribe({
