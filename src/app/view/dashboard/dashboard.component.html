@@ -2,6 +2,8 @@
 
 <h2 class="m-0 mb-4">Inicio</h2>
 
+<app-reparto-hoy />
+
 @if (resumen(); as r) {
   @if (r.ventas; as v) {
     <div class="grid">
@@ -57,6 +59,8 @@
         </p-card>
       </div>
     </div>
+
+    <app-ventas-semanales />
   } @else {
     <p-card>
       <p class="text-center text-color-secondary m-0 p-3">

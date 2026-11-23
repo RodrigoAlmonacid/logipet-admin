@@ -18,6 +18,15 @@
     <div class="surface-200 border-round mt-1" style="height: 6px">
       <div class="bg-primary border-round" style="height: 6px" [style.width.%]="(resumen(e).hechos / resumen(e).total) * 100"></div>
     </div>
+
+    <p-button [label]="mapasAbiertos().has(e.id) ? 'Ocultar mapa' : 'Ver mapa de la ruta'" icon="pi pi-map"
+      [text]="true" size="small" class="mt-2 block" (onClick)="toggleMapa(e.id)" />
+    @if (mapasAbiertos().has(e.id)) {
+      <div class="mt-2">
+        <app-ruta-mapa [deposito]="e.planRuta.deposito" [paradas]="paradasPorEnvio().get(e.id) ?? []" [ruta]="e.rutaOptima" alto="320px" />
+        <small class="text-color-secondary">Verde: depósito · Numerados: paradas en orden · Gris: ya resueltas</small>
+      </div>
+    }
   </div>
 
   @for (p of e.pedidos; track p.id) {
