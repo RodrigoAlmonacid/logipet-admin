@@ -7,10 +7,12 @@ import { ChartModule } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { DashboardService, ResumenDashboard } from '../../services/dashboard.service';
+import { RepartoHoyComponent } from './reparto-hoy.component';
+import { VentasSemanalesComponent } from './ventas-semanales.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, ChartModule, CardModule, TableModule, ToastModule],
+  imports: [CurrencyPipe, ChartModule, CardModule, TableModule, ToastModule, RepartoHoyComponent, VentasSemanalesComponent],
   providers: [MessageService],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

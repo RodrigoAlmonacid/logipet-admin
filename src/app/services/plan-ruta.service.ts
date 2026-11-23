@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from './../../environments/environment';
-import { Deposito } from './deposito-catalogo.service';
 import type { FeatureCollection } from 'geojson';
+import { Deposito } from './deposito-catalogo.service';
 
 // ============================================================
 // PlanRutaService (Angular) — HttpClient wrapper para /plan-rutas.
@@ -17,6 +17,7 @@ import type { FeatureCollection } from 'geojson';
 //   repartidores(planId)        GET  /plan-rutas/:id/repartidores     choferes/ayudantes
 //   despachar(planId, dto)      POST /plan-rutas/:id/despachar
 //   misEnvios()                 GET  /plan-rutas/mis-envios           hoja de ruta del chofer/ayudante
+//   miReparto()                 GET  /plan-rutas/mi-reparto           reparto de hoy de MIS pedidos (vendedor)
 // ============================================================
 
 export interface ComercioRuta {
@@ -136,10 +137,22 @@ export interface EnvioMiRuta {
   fechaEntrega: string;
   distanciaMetros: number | null;
   duracionSegundos: number | null;
+  rutaOptima: FeatureCollection | null;
   camion: { id: number; interno: number; marca: string; modelo: string | null };
   empleados: EmpleadoMini[];
   planRuta: { id: number; fecha: string; deposito: { nombre: string; latitud: number; longitud: number } };
   pedidos: PedidoMiRuta[];
+}
+
+/** Un pedido PROPIO del vendedor que salió a reparto hoy (vista del vendedor, sin importes). */
+export interface ItemMiReparto {
+  pedidoId: number;
+  estado: 'en_ruta' | 'entregado' | 'no_entregado' | string;
+  ordenRuta: number | null;
+  llegadaEstimada: string | null;
+  camionInterno: number | null;
+  cliente: { nombre: string; apellido: string };
+  comercio: { nombre: string; direccion: string };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -164,5 +177,7 @@ export class PlanRutaService {
   cola() { return this.http.get<ColaRuteo>(`${this.url}/cola`); }
   repartidores(planId: number) { return this.http.get<Repartidor[]>(`${this.url}/${planId}/repartidores`); }
   despachar(planId: number, dto: DespacharDto) { return this.http.post<PlanRuta>(`${this.url}/${planId}/despachar`, dto); }
+  /** Reparto de hoy de los pedidos del vendedor logueado (lista vacía si no tiene nada en la calle). */
+  miReparto() { return this.http.get<ItemMiReparto[]>(`${this.url}/mi-reparto`); }
   misEnvios() { return this.http.get<EnvioMiRuta[]>(`${this.url}/mis-envios`); }
 }

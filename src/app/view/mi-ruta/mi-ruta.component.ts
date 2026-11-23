@@ -12,6 +12,7 @@ import { EnvioMiRuta, PedidoMiRuta, PlanRutaService } from '../../services/plan-
 import { RepartoService } from '../../services/reparto.service';
 import { MotivoBaja } from '../../services/pedido.service';
 import { formatKg, formatTime, mensajeError } from '../../helpers/plan-ruta-ui';
+import { ParadaMapa, RutaMapaComponent } from './../../shared/components/ruta-mapa/ruta-mapa.component';
 
 // ============================================================
 // Mi ruta — vista MÓVIL de chofer y ayudante.
@@ -21,7 +22,7 @@ import { formatKg, formatTime, mensajeError } from '../../helpers/plan-ruta-ui';
 
 @Component({
   selector: 'app-mi-ruta',
-  imports: [ReactiveFormsModule, ButtonModule, TagModule, ToastModule, ConfirmDialogModule, DialogModule, SelectModule, TextareaModule],
+  imports: [ReactiveFormsModule, RutaMapaComponent, ButtonModule, TagModule, ToastModule, ConfirmDialogModule, DialogModule, SelectModule, TextareaModule],
   providers: [MessageService, ConfirmationService],
   templateUrl: './mi-ruta.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,8 @@ export class MiRutaComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly trabajando = signal<number | null>(null);
   protected readonly fallido = signal<PedidoMiRuta | null>(null);
+  /** Envíos cuyo mapa está desplegado (en el celu arranca cerrado para no gastar datos ni pantalla). */
+  protected readonly mapasAbiertos = signal<ReadonlySet<number>>(new Set());
   protected readonly dialogVisible = computed(() => this.fallido() !== null);
 
   protected readonly motivos: { label: string; value: MotivoBaja }[] = [
@@ -60,6 +63,39 @@ export class MiRutaComponent implements OnInit {
       error: (err) => { this.loading.set(false); this.error(err); },
     });
   }
+
+  protected toggleMapa(envioId: number): void {
+    this.mapasAbiertos.update((abiertos) => {
+      const nuevo = new Set(abiertos);
+      if (!nuevo.delete(envioId)) nuevo.add(envioId);
+      return nuevo;
+    });
+  }
+
+  /**
+   * Paradas de cada envío, en orden; las ya resueltas se dibujan en gris.
+   * Es un computed (y no un método) para que el array no cambie en cada ciclo de detección
+   * y el mapa no se redibuje ni pierda el zoom del chofer.
+   */
+  protected readonly paradasPorEnvio = computed(
+    () =>
+      new Map<number, ParadaMapa[]>(
+        this.envios().map((e) => [
+          e.id,
+          e.pedidos
+            .filter((p) => p.ordenRuta != null)
+            .map((p) => ({
+              orden: p.ordenRuta as number,
+              latitud: p.comercio.latitud,
+              longitud: p.comercio.longitud,
+              nombre: p.comercio.nombre,
+              direccion: p.comercio.direccion,
+              eta: p.llegadaEstimada ? formatTime(p.llegadaEstimada) : null,
+              resuelta: this.estadoDe(p) !== 'en_ruta',
+            })),
+        ]),
+      ),
+  );
 
   protected estadoDe(p: PedidoMiRuta): string {
     return p.historialEstados[0]?.estado.nombre ?? '';
