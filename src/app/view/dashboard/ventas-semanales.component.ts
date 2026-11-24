@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService, DesgloseVentas, MetricaVentas, VentasSemanales } from '../../services/dashboard.service';
@@ -24,6 +25,7 @@ const ETIQUETA_DESGLOSE: Record<DesgloseVentas, string> = {
   marca: 'Por marca',
   especie: 'Perros / Gatos',
   vendedor: 'Por vendedor',
+  equipo: 'Yo vs. el equipo',
 };
 const PERIODOS = [
   { label: 'Últimas 12 semanas', value: 12 },
@@ -33,13 +35,17 @@ const PERIODOS = [
 ];
 
 // Paleta categórica validada (orden fijo, nunca cíclica). El color sigue a la entidad cuando existe una fija.
-const SLOTS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4'];
+const SLOTS = ['#0EA5E9', '#F0B06B', '#10B981', '#eda100', '#FF69B4'];
 const GRIS = '#9a9a96';
-const COLOR_FIJO: Record<string, string> = { Perros: SLOTS[0], Gatos: SLOTS[1], Otros: GRIS, Otras: GRIS, 'Sin marca': GRIS, Total: SLOTS[0] };
+const COLOR_FIJO: Record<string, string> = {
+  Perros: SLOTS[0], Gatos: SLOTS[1], Otros: GRIS, Otras: GRIS, 'Sin marca': GRIS, Total: SLOTS[0],
+  Yo: SLOTS[0], // en la comparación con el equipo, "yo" siempre es el azul
+  'Promedio por vendedor': GRIS, 'Promedio del equipo': GRIS,
+};
 
 @Component({
   selector: 'app-ventas-semanales',
-  imports: [FormsModule, ButtonModule, CardModule, ChartModule, SelectModule],
+  imports: [FormsModule, ButtonModule, CardModule, ChartModule, MultiSelectModule, SelectModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (visible()) {
@@ -63,6 +69,15 @@ const COLOR_FIJO: Record<string, string> = { Perros: SLOTS[0], Gatos: SLOTS[1], 
             <p-select inputId="vs-periodo" [options]="periodos" optionLabel="label" optionValue="value"
               [ngModel]="semanas()" (ngModelChange)="cambiar({ semanas: $event })" appendTo="body" />
           </div>
+          @if (datos()?.desglose === 'vendedor' && (datos()?.vendedores?.length ?? 0) > 0) {
+            <div class="flex flex-column gap-1">
+              <label class="text-sm font-medium" for="vs-vendedores">Vendedores a comparar</label>
+              <p-multiselect inputId="vs-vendedores" [options]="datos()!.vendedores!" optionLabel="nombre" optionValue="id"
+                [ngModel]="vendedoresElegidos()" (ngModelChange)="cambiar({ vendedores: $event })"
+                [selectionLimit]="8" [showToggleAll]="false" display="chip" placeholder="Los 5 mejores" appendTo="body"
+                styleClass="w-full md:w-20rem" />
+            </div>
+          }
           <p-button [label]="verTabla() ? 'Ver gráfico' : 'Ver como tabla'" [icon]="verTabla() ? 'pi pi-chart-line' : 'pi pi-table'"
             [text]="true" size="small" (onClick)="verTabla.set(!verTabla())" />
         </div>
@@ -70,9 +85,11 @@ const COLOR_FIJO: Record<string, string> = { Perros: SLOTS[0], Gatos: SLOTS[1], 
 
         @if (datos(); as d) {
           <div class="text-color-secondary text-sm mb-2">
-            {{ d.alcance === 'propios' ? 'Tus ventas' : 'Todas las ventas' }} ·
-            total del período: <strong>{{ formatear(d.totalPeriodo) }}</strong>
-            @if (d.desglose === 'marca' || d.desglose === 'vendedor') { · se muestran las 5 principales y "Otras" }
+            {{ d.desglose === 'equipo' ? 'Vos contra el equipo' : d.alcance === 'propios' ? 'Tus ventas' : 'Todas las ventas' }} ·
+            {{ d.desglose === 'equipo' ? 'tu total' : 'total del período' }}: <strong>{{ formatear(d.totalPeriodo) }}</strong>
+            @if (d.desglose === 'marca') { · se muestran las 5 principales y "Otras" }
+            @if (d.desglose === 'vendedor') { · línea punteada: promedio por vendedor activo }
+            @if (d.desglose === 'equipo') { · línea punteada: promedio del equipo (no se muestran otros vendedores) }
           </div>
           @if (d.totalPeriodo === 0) {
             <p class="text-center text-color-secondary p-4 m-0">No hay ventas entregadas en este período.</p>
@@ -126,6 +143,8 @@ export class VentasSemanalesComponent implements OnInit {
   protected readonly semanas = signal(26);
   protected readonly metrica = signal<MetricaVentas | undefined>(undefined);
   protected readonly desglose = signal<DesgloseVentas>('total');
+  /** Ids elegidos a mano por el dueño; vacío = el backend muestra los 5 mejores. */
+  protected readonly vendedoresElegidos = signal<number[]>([]);
 
   // Alcanza con poder ver pedidos (propios o todos) o stock; el backend decide qué opciones ofrecer.
   protected readonly visible = computed(
@@ -150,6 +169,7 @@ export class VentasSemanalesComponent implements OnInit {
     return {
       labels: d.semanas.map((s) => this.corta(s)),
       datasets: d.series.map((s) => {
+        const esPromedio = s.nombre.startsWith('Promedio');
         const color = COLOR_FIJO[s.nombre] ?? SLOTS[siguiente++ % SLOTS.length];
         return {
           label: s.nombre,
@@ -157,6 +177,7 @@ export class VentasSemanalesComponent implements OnInit {
           borderColor: color,
           backgroundColor: color,
           borderWidth: 2,
+          borderDash: esPromedio ? [6, 4] : [], // el promedio se distingue por el trazo, no solo por el color
           pointRadius: 0, // línea limpia; el punto aparece al pasar el mouse / tocar
           pointHoverRadius: 5,
           pointHitRadius: 12,
@@ -202,20 +223,25 @@ export class VentasSemanalesComponent implements OnInit {
     if (this.visible()) this.cargar();
   }
 
-  protected cambiar(c: { metrica?: MetricaVentas; desglose?: DesgloseVentas; semanas?: number }): void {
+  protected cambiar(c: { metrica?: MetricaVentas; desglose?: DesgloseVentas; semanas?: number; vendedores?: number[] }): void {
     if (c.metrica) this.metrica.set(c.metrica);
-    if (c.desglose) this.desglose.set(c.desglose);
+    if (c.desglose) {
+      this.desglose.set(c.desglose);
+      this.vendedoresElegidos.set([]); // al cambiar de desglose se vuelve a la selección por defecto
+    }
+    if (c.vendedores) this.vendedoresElegidos.set(c.vendedores);
     if (c.semanas) this.semanas.set(c.semanas);
     this.cargar();
   }
 
   private cargar(): void {
     this.cargando.set(true);
-    this.service.ventasSemanales({ semanas: this.semanas(), metrica: this.metrica(), desglose: this.desglose() }).subscribe({
+    this.service.ventasSemanales({ semanas: this.semanas(), metrica: this.metrica(), desglose: this.desglose(), vendedores: this.vendedoresElegidos() }).subscribe({
       next: (d) => {
         this.datos.set(d);
         this.metrica.set(d.metrica); // el backend resuelve el default según el rol
         this.desglose.set(d.desglose);
+        if (d.desglose === 'vendedor' && d.seleccion && this.vendedoresElegidos().length === 0) this.vendedoresElegidos.set(d.seleccion);
         this.cargando.set(false);
       },
       error: () => {
