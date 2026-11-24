@@ -25,7 +25,7 @@ export interface ResumenDashboard {
 }
 
 export type MetricaVentas = 'importe' | 'pedidos' | 'unidades';
-export type DesgloseVentas = 'total' | 'marca' | 'especie' | 'vendedor';
+export type DesgloseVentas = 'total' | 'marca' | 'especie' | 'vendedor' | 'equipo';
 
 export interface VentasSemanales {
   metrica: MetricaVentas;
@@ -36,6 +36,9 @@ export interface VentasSemanales {
   semanas: string[]; // lunes de cada semana, "YYYY-MM-DD"
   series: { nombre: string; valores: number[] }[];
   totalPeriodo: number;
+  /** Solo en desglose 'vendedor': quiénes vendieron en el período (para el selector) y cuáles se muestran. */
+  vendedores?: { id: number; nombre: string; total: number }[];
+  seleccion?: number[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -43,11 +46,12 @@ export class DashboardService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/dashboard`;
 
-  ventasSemanales(params: { semanas?: number; metrica?: MetricaVentas; desglose?: DesgloseVentas } = {}) {
+  ventasSemanales(params: { semanas?: number; metrica?: MetricaVentas; desglose?: DesgloseVentas; vendedores?: number[] } = {}) {
     const q = new URLSearchParams();
     if (params.semanas) q.set('semanas', String(params.semanas));
     if (params.metrica) q.set('metrica', params.metrica);
     if (params.desglose) q.set('desglose', params.desglose);
+    if (params.vendedores?.length) q.set('vendedores', params.vendedores.join(','));
     const qs = q.toString();
     return this.http.get<VentasSemanales>(`${this.url}/ventas-semanales${qs ? '?' + qs : ''}`);
   }
