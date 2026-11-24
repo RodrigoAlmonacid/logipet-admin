@@ -4,6 +4,7 @@ import { TagModule } from 'primeng/tag';
 import { AuthService } from '../../services/auth.service';
 import { ItemMiReparto, PlanRutaService } from '../../services/plan-ruta.service';
 import { formatTime } from '../../helpers/plan-ruta-ui';
+import { DatePipe } from '@angular/common';
 
 // ============================================================
 // "Tus pedidos en reparto hoy" — para el vendedor.
@@ -19,12 +20,12 @@ const ETIQUETA: Record<string, { label: string; severity: 'info' | 'success' | '
 
 @Component({
   selector: 'app-reparto-hoy',
-  imports: [CardModule, TagModule],
+  imports: [CardModule, TagModule, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (items().length > 0) {
       <p-card styleClass="mb-4">
-        <ng-template #title><i class="pi pi-truck mr-2"></i>Tus pedidos en reparto hoy</ng-template>
+        <ng-template #title><i class="pi pi-truck mr-2"></i>Tus pedidos en reparto:</ng-template>
         <div class="flex flex-column gap-3">
           @for (i of items(); track i.pedidoId) {
             <div class="flex align-items-start justify-content-between gap-2 flex-wrap">
@@ -37,7 +38,7 @@ const ETIQUETA: Record<string, { label: string; severity: 'info' | 'success' | '
               <div class="text-right">
                 <p-tag [value]="etiqueta(i).label" [severity]="etiqueta(i).severity" />
                 @if (i.estado === 'en_ruta' && i.llegadaEstimada) {
-                  <div class="text-sm text-color-secondary mt-1">Llega ~{{ hora(i.llegadaEstimada) }} hs</div>
+                  <div class="text-sm text-color-secondary mt-1">Llega aproximadamente a las {{ i.llegadaEstimada | date:'HH:mm' }} hs del {{ i.llegadaEstimada | date:'dd/MM/yyyy' }}</div>
                 }
                 @if (i.estado === 'no_entregado') {
                   <div class="text-sm text-color-secondary mt-1">Vuelve a la cola de ruteo</div>
